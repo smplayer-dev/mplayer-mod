@@ -159,12 +159,14 @@ static uint32_t draw_image(mp_image_t* mpi){
     // if -dr or -slices then do nothing:
     if(mpi->flags&(MP_IMGFLAG_DIRECT|MP_IMGFLAG_DRAW_CALLBACK)) return VO_TRUE;
 
+	/*
     snprintf (buf, 100, "%s/%s%08d.png", png_outdir, png_outfile_prefix, ++framenum);
     outfile = fopen(buf, "wb");
     if (!outfile) {
         mp_msg(MSGT_VO,MSGL_WARN, MSGTR_LIBVO_PNG_ErrorOpeningForWriting, strerror(errno));
         return 1;
     }
+	*/
 
     pic = av_frame_alloc();
     avctx->width = mpi->w;
@@ -180,6 +182,9 @@ static uint32_t draw_image(mp_image_t* mpi){
         outbuffer = av_malloc(buffersize);
         outbuffer_size = buffersize;
     }
+
+	mp_msg(MSGT_VO,MSGL_INFO, "width: %d height: %d", avctx->width, avctx->height);
+	/*
     av_init_packet(&pkt);
     pkt.data = outbuffer;
     pkt.size = outbuffer_size;
@@ -194,7 +199,7 @@ static uint32_t draw_image(mp_image_t* mpi){
 
     fclose(outfile);
     av_free_packet(&pkt);
-
+	*/
     return VO_TRUE;
 }
 
