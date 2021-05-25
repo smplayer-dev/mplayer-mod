@@ -241,6 +241,12 @@ static uint32_t draw_image(mp_image_t* mpi){
     }
 
 	//mp_msg(MSGT_VO,MSGL_INFO, "width: %d height: %d", avctx->width, avctx->height);
+	struct img_info_t * info = image_data;
+	info->width = mpi->w;
+	info->height = mpi->h;
+	info->bytes = img_info.bytes;
+	info->stride = img_info.stride;
+
 	/*
     av_init_packet(&pkt);
     pkt.data = outbuffer;
