@@ -58,6 +58,7 @@ struct img_info_t {
 	uint32_t bytes;
 	uint32_t stride;
 	uint32_t format;
+	unsigned char * image_buffer;
 } img_info;
 
 static const vo_info_t info =
@@ -180,7 +181,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		}
 
 
-		if (ftruncate(shm_fd, img_info.height*img_info.stride) == -1)
+		if (ftruncate(shm_fd, sizeof(img_info) + img_info.height * img_info.stride) == -1)
 		{
 			mp_msg(MSGT_VO, MSGL_FATAL,
 				   "[vo_shm] failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
@@ -189,7 +190,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 			return 1;
 		}
 
-		image_data = mmap(NULL, img_info.height*img_info.stride,
+		image_data = mmap(NULL, sizeof(img_info) + img_info.height * img_info.stride,
 					PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
 		close(shm_fd);
 
@@ -241,11 +242,14 @@ static uint32_t draw_image(mp_image_t* mpi){
     }
 
 	//mp_msg(MSGT_VO,MSGL_INFO, "width: %d height: %d", avctx->width, avctx->height);
+	//mp_msg(MSGT_VO,MSGL_INFO, "linesize: %d\n", pic->linesize[0]);
 	struct img_info_t * info = image_data;
 	info->width = mpi->w;
 	info->height = mpi->h;
 	info->bytes = img_info.bytes;
 	info->stride = img_info.stride;
+	mp_msg(MSGT_VO,MSGL_INFO, "info ptr: %x buffer: %x\n", info, &info->image_buffer);//info + sizeof(info));
+	memcpy(&info->image_buffer, pic->data[0], mpi->w * mpi->h * 3);
 
 	/*
     av_init_packet(&pkt);
