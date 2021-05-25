@@ -1,1 +1,1 @@
-# mpv-tests
+# mplayer-tests
