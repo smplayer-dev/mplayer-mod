@@ -292,6 +292,13 @@ static void uninit(void){
     png_outdir = NULL;
     free(png_outfile_prefix);
     png_outfile_prefix = NULL;
+
+	mp_msg(MSGT_VO, MSGL_INFO, "uninit");
+	if (munmap(image_data, img_info.height * img_info.stride) == -1)
+		mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: munmap failed. Error: %s\n", strerror(errno));
+
+	if (shm_unlink(buffer_name) == -1)
+		mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: shm_unlink failed. Error: %s\n", strerror(errno));
 }
 
 static void check_events(void){}
