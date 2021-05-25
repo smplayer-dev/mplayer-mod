@@ -248,7 +248,7 @@ static uint32_t draw_image(mp_image_t* mpi){
 	info->height = mpi->h;
 	info->bytes = img_info.bytes;
 	info->stride = img_info.stride;
-	mp_msg(MSGT_VO,MSGL_INFO, "info ptr: %x buffer: %x\n", info, &info->image_buffer);//info + sizeof(info));
+	//mp_msg(MSGT_VO,MSGL_INFO, "info ptr: %x buffer: %x\n", info, &info->image_buffer);//info + sizeof(info));
 	memcpy(&info->image_buffer, pic->data[0], mpi->w * mpi->h * 3);
 
 	/*
