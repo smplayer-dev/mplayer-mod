@@ -52,11 +52,13 @@ static unsigned char *image_data;
 static uint8_t image_page = 0;
 static unsigned char *image_datas[2];
 
-static uint32_t image_width;
-static uint32_t image_height;
-static uint32_t image_bytes;
-static uint32_t image_stride;
-static uint32_t image_format;
+struct img_info_t {
+	uint32_t width;
+	uint32_t height;
+	uint32_t bytes;
+	uint32_t stride;
+	uint32_t format;
+} img_info;
 
 static const vo_info_t info =
 {
@@ -160,10 +162,10 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
     }
 
 	if (1) {
-		image_width = width;
-		image_height = height;
-		image_bytes = 3;
-		image_stride = image_width * image_bytes;
+		img_info.width = width;
+		img_info.height = height;
+		img_info.bytes = 3;
+		img_info.stride = img_info.width * img_info.bytes;
 		int shm_fd;
 		mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer "
 				"named \"%s\"\n",buffer_name);
@@ -178,7 +180,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 		}
 
 
-		if (ftruncate(shm_fd, image_height*image_stride) == -1)
+		if (ftruncate(shm_fd, img_info.height*img_info.stride) == -1)
 		{
 			mp_msg(MSGT_VO, MSGL_FATAL,
 				   "[vo_shm] failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
@@ -187,7 +189,7 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
 			return 1;
 		}
 
-		image_data = mmap(NULL, image_height*image_stride,
+		image_data = mmap(NULL, img_info.height*img_info.stride,
 					PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
 		close(shm_fd);
 
