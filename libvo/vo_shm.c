@@ -29,6 +29,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/mman.h>
 
 #include "config.h"
 #include "fmt-conversion.h"
@@ -43,6 +44,19 @@
 #include "libavcodec/avcodec.h"
 
 #define BUFLENGTH 512
+
+const char * buffer_name = "mplayer";
+//image
+static unsigned char *image_data;
+// For double buffering
+static uint8_t image_page = 0;
+static unsigned char *image_datas[2];
+
+static uint32_t image_width;
+static uint32_t image_height;
+static uint32_t image_bytes;
+static uint32_t image_stride;
+static uint32_t image_format;
 
 static const vo_info_t info =
 {
@@ -144,6 +158,47 @@ config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uin
         }
         png_format = format;
     }
+
+	if (1) {
+		image_width = width;
+		image_height = height;
+		image_bytes = 3;
+		image_stride = image_width * image_bytes;
+		int shm_fd;
+		mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer "
+				"named \"%s\"\n",buffer_name);
+
+		// create shared memory
+		shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+		if (shm_fd == -1)
+		{
+			mp_msg(MSGT_VO, MSGL_FATAL,
+				   "[vo_shm] failed to open shared memory. Error: %s\n", strerror(errno));
+			return 1;
+		}
+
+
+		if (ftruncate(shm_fd, image_height*image_stride) == -1)
+		{
+			mp_msg(MSGT_VO, MSGL_FATAL,
+				   "[vo_shm] failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
+			close(shm_fd);
+			shm_unlink(buffer_name);
+			return 1;
+		}
+
+		image_data = mmap(NULL, image_height*image_stride,
+					PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+		close(shm_fd);
+
+		if (image_data == MAP_FAILED)
+		{
+			mp_msg(MSGT_VO, MSGL_FATAL,
+				   "[vo_shm] failed to map shared memory. Error: %s\n", strerror(errno));
+			shm_unlink(buffer_name);
+			return 1;
+		}
+	}
     return 0;
 }
 
@@ -183,7 +238,7 @@ static uint32_t draw_image(mp_image_t* mpi){
         outbuffer_size = buffersize;
     }
 
-	mp_msg(MSGT_VO,MSGL_INFO, "width: %d height: %d", avctx->width, avctx->height);
+	//mp_msg(MSGT_VO,MSGL_INFO, "width: %d height: %d", avctx->width, avctx->height);
 	/*
     av_init_packet(&pkt);
     pkt.data = outbuffer;
