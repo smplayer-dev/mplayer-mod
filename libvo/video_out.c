@@ -119,6 +119,7 @@ extern const vo_functions_t video_out_zr2;
 extern const vo_functions_t video_out_bl;
 extern const vo_functions_t video_out_fbdev2;
 extern const vo_functions_t video_out_png;
+extern const vo_functions_t video_out_shm;
 extern const vo_functions_t video_out_ggi;
 extern const vo_functions_t video_out_aa;
 extern const vo_functions_t video_out_caca;
@@ -285,6 +286,7 @@ const vo_functions_t* const video_out_drivers[] =
 #endif
 #ifdef CONFIG_FFMPEG
         &video_out_png,
+        &video_out_shm,
 #endif
 #ifdef CONFIG_JPEG
         &video_out_jpeg,
