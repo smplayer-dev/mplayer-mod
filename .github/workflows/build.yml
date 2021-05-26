@@ -1,0 +1,72 @@
+name: Build mplayer
+env:
+  version: '1.4'
+
+on:
+  workflow_dispatch:
+  release:
+    types: [published]
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - { name: 'xenial', os: 'ubuntu-latest', container: 'wachii/ubuntu-qt:16.04' }
+          #- { name: 'bionic', os: 'ubuntu-18.04', container: '' }
+          #- { name: 'focal', os: 'ubuntu-20.04', container: '' }
+
+    runs-on: ${{ matrix.config.os }}
+    container: ${{ matrix.config.container }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+           path: MPlayer-${{env.version}}
+
+      - name: Install debian dir
+        run: |
+            git clone https://github.com/smplayer-dev/mplayer-build.git .
+            cp debian/* MPlayer-${{env.version}}/debian/
+      
+      #- name: Add ffmpeg repository
+      #  if: ${{ matrix.config.name == 'xenial' || matrix.config.name == 'bionic' }}
+      #  run: sudo add-apt-repository -y ppa:jonathonf/ffmpeg-4
+
+      - name: Install devscripts
+        run: |
+            sudo apt-get -y update
+            sudo apt-get -y install devscripts equivs
+            
+      - name: Install build dependencies
+        run: |
+            cd MPlayer-${{env.version}}
+            dch --create --package mplayer -v 2:${{env.version}}-1~`lsb_release -cs` "Automatic build"
+            mk-build-deps
+            ls *.deb
+            dpkg --info ./mplayer-build-deps*.deb
+            sudo apt-get -y install ./mplayer-build-deps*.deb --no-install-recommends
+
+      - name: Build
+        run: |
+            cd MPlayer-${{env.version}}
+            fakeroot debian/rules binary -j4
+            ls -l ../*.deb
+
+      - name: Create artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: mplayer-${{ env.version }}-${{ matrix.config.name }}
+          path: ./*.deb
+
+      - name: Upload package to release
+        if: github.event_name == 'release'
+        uses: svenstaro/upload-release-action@v2
+        with:
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./*.deb
+          tag: ${{ github.ref }}
+          overwrite: true
+          file_glob: true
