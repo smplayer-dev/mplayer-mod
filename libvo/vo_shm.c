@@ -111,7 +111,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 {
 	free_file_specific();
 
-	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] image_format: %d\n", image_format);
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] image_format: %d\n", image_format);
 
 	//misc mplayer setup
 	image_width = width;
@@ -133,7 +133,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 	// should be aligned, but that would break the shared buffer
 	image_stride = image_width * image_bytes;
 
-		mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] %d %d %d\n", image_width, image_height, image_stride);
+		//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] %d %d %d\n", image_width, image_height, image_stride);
 
 		int shm_fd;
 		mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer "
@@ -170,7 +170,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 			return 1;
 		}
 		image_data = &header->image_buffer;
-		mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
+		//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
 
 	return 0;
 }
