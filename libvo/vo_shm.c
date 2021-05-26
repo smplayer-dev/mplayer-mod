@@ -64,6 +64,7 @@ static uint32_t image_height;
 static uint32_t image_bytes;
 static uint32_t image_stride;
 static uint32_t image_format;
+static uint32_t frame_count = 0;
 
 struct header_t {
 	uint32_t width;
@@ -71,6 +72,7 @@ struct header_t {
 	uint32_t bytes;
 	uint32_t stride;
 	uint32_t format;
+	uint32_t frame_count;
 	unsigned char * image_buffer;
 } * header;
 
@@ -192,9 +194,13 @@ static uint32_t draw_image(mp_image_t *mpi)
 	header->height = image_height;
 	header->bytes = image_bytes;
 	header->stride = image_stride;
+	header->format = image_format;
+	header->frame_count = frame_count++;
 
 	if (!(mpi->flags & MP_IMGFLAG_DIRECT))
 	memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
+
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] frame_count: %d\n", frame_count);
 
 	return VO_TRUE;
 }
