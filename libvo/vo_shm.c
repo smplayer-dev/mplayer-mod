@@ -65,6 +65,15 @@ static uint32_t image_bytes;
 static uint32_t image_stride;
 static uint32_t image_format;
 
+struct header_t {
+	uint32_t width;
+	uint32_t height;
+	uint32_t bytes;
+	uint32_t stride;
+	uint32_t format;
+	unsigned char * image_buffer;
+} * header;
+
 static vo_info_t info =
 {
 	"Shared Memory",
@@ -85,7 +94,7 @@ static void draw_alpha(int x0, int y0, int w, int h, unsigned char *src, unsigne
 
 static void free_file_specific(void)
 {
-		if (munmap(image_data, image_height*image_stride) == -1)
+		if (munmap(header, sizeof(header) + image_height*image_stride) == -1)
 			mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: munmap failed. Error: %s\n", strerror(errno));
 
 		if (shm_unlink(buffer_name) == -1)
@@ -138,7 +147,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 		}
 
 
-		if (ftruncate(shm_fd, image_height*image_stride) == -1)
+		if (ftruncate(shm_fd, sizeof(header) + image_height*image_stride) == -1)
 		{
 			mp_msg(MSGT_VO, MSGL_FATAL,
 				   "[vo_shm] failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
@@ -147,17 +156,19 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 			return 1;
 		}
 
-		image_data = mmap(NULL, image_height*image_stride,
+		header = mmap(NULL, sizeof(header) + image_height*image_stride,
 					PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
 		close(shm_fd);
 
-		if (image_data == MAP_FAILED)
+		if (header == MAP_FAILED)
 		{
 			mp_msg(MSGT_VO, MSGL_FATAL,
 				   "[vo_shm] failed to map shared memory. Error: %s\n", strerror(errno));
 			shm_unlink(buffer_name);
 			return 1;
 		}
+		image_data = &header->image_buffer;
+		mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
 
 	return 0;
 }
@@ -177,6 +188,11 @@ static void flip_page(void)
 
 static uint32_t draw_image(mp_image_t *mpi)
 {
+	header->width = image_width;
+	header->height = image_height;
+	header->bytes = image_bytes;
+	header->stride = image_stride;
+
 	if (!(mpi->flags & MP_IMGFLAG_DIRECT))
 	memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
 
