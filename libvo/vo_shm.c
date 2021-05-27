@@ -65,6 +65,7 @@ static uint32_t image_bytes;
 static uint32_t image_stride;
 static uint32_t image_format;
 static uint32_t frame_count = 0;
+static uint32_t buffer_size = 0;
 
 struct header_t {
 	uint32_t width;
@@ -96,7 +97,7 @@ static void draw_alpha(int x0, int y0, int w, int h, unsigned char *src, unsigne
 
 static void free_file_specific(void)
 {
-		if (munmap(header, sizeof(header) + image_height*image_stride) == -1)
+		if (munmap(header, buffer_size) == -1)
 			mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: munmap failed. Error: %s\n", strerror(errno));
 
 		if (shm_unlink(buffer_name) == -1)
@@ -148,8 +149,9 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 			return 1;
 		}
 
+		buffer_size = sizeof(header) + (image_height * image_stride);
 
-		if (ftruncate(shm_fd, sizeof(header) + image_height*image_stride) == -1)
+		if (ftruncate(shm_fd, buffer_size) == -1)
 		{
 			mp_msg(MSGT_VO, MSGL_FATAL,
 				   "[vo_shm] failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
@@ -158,8 +160,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 			return 1;
 		}
 
-		header = mmap(NULL, sizeof(header) + image_height*image_stride,
-					PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+		header = mmap(NULL, buffer_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
 		close(shm_fd);
 
 		if (header == MAP_FAILED)
