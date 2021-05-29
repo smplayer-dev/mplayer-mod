@@ -49,15 +49,13 @@
 static int shared_buffer = 0;
 #define DEFAULT_BUFFER_NAME "mplayer"
 static char *buffer_name;
+static int shm_fd = 0;
 
 //Screen
 static int screen_id = -1;
 
 //image
 static unsigned char *image_data;
-// For double buffering
-static uint8_t image_page = 0;
-static unsigned char *image_datas[2];
 
 static uint32_t image_width;
 static uint32_t image_height;
@@ -138,7 +136,6 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 
 	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] %d %d %d\n", image_width, image_height, image_stride);
 
-	int shm_fd;
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer "
 			"named \"%s\"\n",buffer_name);
 
@@ -172,7 +169,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 		shm_unlink(buffer_name);
 		return 1;
 	}
-	image_data = &header->image_buffer;
+	image_data = (unsigned char*) &header->image_buffer;
 	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
 	header->header_size = sizeof(struct header_t);
 
@@ -240,8 +237,9 @@ static int query_format(uint32_t format)
     }
     return 0;
 	*/
-	image_format = format;
+
     const int supported_flags = VFCAP_CSP_SUPPORTED|VFCAP_CSP_SUPPORTED_BY_HW|VFCAP_ACCEPT_STRIDE;
+	image_format = format;
     switch(format){
     case IMGFMT_RGB24:
         return  supported_flags;
