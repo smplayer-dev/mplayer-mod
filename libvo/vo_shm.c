@@ -179,7 +179,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 
 		semptr = sem_open(buffer_name, O_CREAT, S_IWUSR | S_IRUSR, 0);
 		if (semptr == SEM_FAILED) {
-			mp_msg(MSGT_VO, MSGL_FATAL,
+			mp_msg(MSGT_VO, MSGL_INFO,
 				   "[vo_shm] failed to create semaphore. Error: %s\n", strerror(errno));
 		}
 
@@ -209,9 +209,9 @@ static uint32_t draw_image(mp_image_t *mpi)
 	header->frame_count = frame_count++;
 
 	if (!(mpi->flags & MP_IMGFLAG_DIRECT)) {
-		sem_post(semptr);
-		memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
 		sem_trywait(semptr);
+		memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
+		sem_post(semptr);
 	}
 
 	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] frame_count: %d\n", frame_count);
