@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
+#include <semaphore.h>
 
 //MPLAYER
 #include "config.h"
@@ -49,6 +50,7 @@
 static int shared_buffer = 0;
 #define DEFAULT_BUFFER_NAME "mplayer"
 static char *buffer_name;
+static sem_t* semptr;
 
 //Screen
 static int screen_id = -1;
@@ -97,11 +99,13 @@ static void draw_alpha(int x0, int y0, int w, int h, unsigned char *src, unsigne
 
 static void free_file_specific(void)
 {
-		if (munmap(header, buffer_size) == -1)
-			mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: munmap failed. Error: %s\n", strerror(errno));
+	if (munmap(header, buffer_size) == -1)
+		mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: munmap failed. Error: %s\n", strerror(errno));
 
-		if (shm_unlink(buffer_name) == -1)
-			mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: shm_unlink failed. Error: %s\n", strerror(errno));
+	if (shm_unlink(buffer_name) == -1)
+		mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: shm_unlink failed. Error: %s\n", strerror(errno));
+
+	sem_close(semptr);
 }
 
 static void update_screen_info_shared_buffer(void)
@@ -173,6 +177,12 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 		image_data = &header->image_buffer;
 		//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
 
+		semptr = sem_open(buffer_name, O_CREAT, S_IWUSR | S_IRUSR, 0);
+		if (semptr == SEM_FAILED) {
+			mp_msg(MSGT_VO, MSGL_FATAL,
+				   "[vo_shm] failed to create semaphore. Error: %s\n", strerror(errno));
+		}
+
 	return 0;
 }
 
@@ -198,8 +208,11 @@ static uint32_t draw_image(mp_image_t *mpi)
 	header->format = image_format;
 	header->frame_count = frame_count++;
 
-	if (!(mpi->flags & MP_IMGFLAG_DIRECT))
-	memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
+	if (!(mpi->flags & MP_IMGFLAG_DIRECT)) {
+		sem_post(semptr);
+		memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
+		sem_trywait(semptr);
+	}
 
 	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] frame_count: %d\n", frame_count);
 
