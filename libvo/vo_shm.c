@@ -25,7 +25,6 @@
 #include <unistd.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <semaphore.h>
 
 //MPLAYER
 #include "config.h"
@@ -50,7 +49,6 @@
 static int shared_buffer = 0;
 #define DEFAULT_BUFFER_NAME "mplayer"
 static char *buffer_name;
-static sem_t* semptr;
 
 //Screen
 static int screen_id = -1;
@@ -70,12 +68,14 @@ static uint32_t frame_count = 0;
 static uint32_t buffer_size = 0;
 
 struct header_t {
+	uint32_t header_size;
 	uint32_t width;
 	uint32_t height;
 	uint32_t bytes;
 	uint32_t stride;
 	uint32_t format;
 	uint32_t frame_count;
+	uint32_t busy;
 	unsigned char * image_buffer;
 } * header;
 
@@ -104,8 +104,6 @@ static void free_file_specific(void)
 
 	if (shm_unlink(buffer_name) == -1)
 		mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: shm_unlink failed. Error: %s\n", strerror(errno));
-
-	sem_close(semptr);
 }
 
 static void update_screen_info_shared_buffer(void)
@@ -138,50 +136,45 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 	// should be aligned, but that would break the shared buffer
 	image_stride = image_width * image_bytes;
 
-		//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] %d %d %d\n", image_width, image_height, image_stride);
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] %d %d %d\n", image_width, image_height, image_stride);
 
-		int shm_fd;
-		mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer "
-				"named \"%s\"\n",buffer_name);
+	int shm_fd;
+	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer "
+			"named \"%s\"\n",buffer_name);
 
-		// create shared memory
-		shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
-		if (shm_fd == -1)
-		{
-			mp_msg(MSGT_VO, MSGL_FATAL,
-				   "[vo_shm] failed to open shared memory. Error: %s\n", strerror(errno));
-			return 1;
-		}
+	// create shared memory
+	shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
+	if (shm_fd == -1)
+	{
+		mp_msg(MSGT_VO, MSGL_FATAL,
+			   "[vo_shm] failed to open shared memory. Error: %s\n", strerror(errno));
+		return 1;
+	}
 
-		buffer_size = sizeof(header) + (image_height * image_stride);
+	buffer_size = sizeof(header) + (image_height * image_stride);
 
-		if (ftruncate(shm_fd, buffer_size) == -1)
-		{
-			mp_msg(MSGT_VO, MSGL_FATAL,
-				   "[vo_shm] failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
-			close(shm_fd);
-			shm_unlink(buffer_name);
-			return 1;
-		}
-
-		header = mmap(NULL, buffer_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+	if (ftruncate(shm_fd, buffer_size) == -1)
+	{
+		mp_msg(MSGT_VO, MSGL_FATAL,
+			   "[vo_shm] failed to size shared memory, possibly already in use. Error: %s\n", strerror(errno));
 		close(shm_fd);
+		shm_unlink(buffer_name);
+		return 1;
+	}
 
-		if (header == MAP_FAILED)
-		{
-			mp_msg(MSGT_VO, MSGL_FATAL,
-				   "[vo_shm] failed to map shared memory. Error: %s\n", strerror(errno));
-			shm_unlink(buffer_name);
-			return 1;
-		}
-		image_data = &header->image_buffer;
-		//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
+	header = mmap(NULL, buffer_size, PROT_READ | PROT_WRITE, MAP_SHARED, shm_fd, 0);
+	close(shm_fd);
 
-		semptr = sem_open(buffer_name, O_CREAT, S_IWUSR | S_IRUSR, 0);
-		if (semptr == SEM_FAILED) {
-			mp_msg(MSGT_VO, MSGL_INFO,
-				   "[vo_shm] failed to create semaphore. Error: %s\n", strerror(errno));
-		}
+	if (header == MAP_FAILED)
+	{
+		mp_msg(MSGT_VO, MSGL_FATAL,
+			   "[vo_shm] failed to map shared memory. Error: %s\n", strerror(errno));
+		shm_unlink(buffer_name);
+		return 1;
+	}
+	image_data = &header->image_buffer;
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
+	header->header_size = sizeof(header);
 
 	return 0;
 }
@@ -209,9 +202,9 @@ static uint32_t draw_image(mp_image_t *mpi)
 	header->frame_count = frame_count++;
 
 	if (!(mpi->flags & MP_IMGFLAG_DIRECT)) {
-		sem_trywait(semptr);
+		header->busy = 1;
 		memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
-		sem_post(semptr);
+		header->busy = 0;
 	}
 
 	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] frame_count: %d\n", frame_count);
