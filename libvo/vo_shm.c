@@ -174,7 +174,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 	}
 	image_data = &header->image_buffer;
 	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
-	header->header_size = sizeof(header);
+	header->header_size = sizeof(struct header_t);
 
 	return 0;
 }
