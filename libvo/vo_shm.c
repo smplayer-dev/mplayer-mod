@@ -221,10 +221,12 @@ static int query_format(uint32_t format)
 	{
 		/*
 		case IMGFMT_YUY2:
-			pixelFormat = kYUVSPixelFormat;
+			//pixelFormat = kYUVSPixelFormat;
 			return supportflags;
 		case IMGFMT_UYVY:
-			pixelFormat = k2vuyPixelFormat;
+			//pixelFormat = k2vuyPixelFormat;
+			return supportflags;
+		case IMGFMT_YV12:
 			return supportflags;
 		*/
 		case IMGFMT_RGB24:
