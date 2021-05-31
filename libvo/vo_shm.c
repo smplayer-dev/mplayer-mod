@@ -122,6 +122,9 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 		case IMGFMT_RGB24:
 			image_bytes = 3;
 			break;
+		case IMGFMT_RGB16:
+			image_bytes = 2;
+			break;
 		case IMGFMT_ARGB:
 		case IMGFMT_BGRA:
 			image_bytes = 4;
@@ -211,43 +214,48 @@ static uint32_t draw_image(mp_image_t *mpi)
 
 static int query_format(uint32_t format)
 {
-	/*
     const int supportflags = VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW | VFCAP_OSD | VFCAP_HWSCALE_UP | VFCAP_HWSCALE_DOWN | VFCAP_ACCEPT_STRIDE | VOCAP_NOSLICES;
-	image_format = format;
+    image_format = format;
 
     switch(format)
 	{
+		/*
 		case IMGFMT_YUY2:
 			pixelFormat = kYUVSPixelFormat;
 			return supportflags;
-
 		case IMGFMT_UYVY:
 			pixelFormat = k2vuyPixelFormat;
 			return supportflags;
+		*/
 		case IMGFMT_RGB24:
-			pixelFormat = k24RGBPixelFormat;
+			//pixelFormat = k24RGBPixelFormat;
 			return supportflags;
+		/*
 		case IMGFMT_ARGB:
-			pixelFormat = k32ARGBPixelFormat;
+			//pixelFormat = k32ARGBPixelFormat;
 			return supportflags;
-
+		*/
+		/*
 		case IMGFMT_BGRA:
-			pixelFormat = k32BGRAPixelFormat;
+			//pixelFormat = k32BGRAPixelFormat;
+			return supportflags;
+		*/
+		case IMGFMT_RGB16:
+			//pixelFormat = k32BGRAPixelFormat;
 			return supportflags;
     }
     return 0;
-	*/
 
+	/*
     const int supported_flags = VFCAP_CSP_SUPPORTED|VFCAP_CSP_SUPPORTED_BY_HW|VFCAP_ACCEPT_STRIDE;
-	image_format = format;
+    image_format = format;
     switch(format){
     case IMGFMT_RGB24:
         return  supported_flags;
-	/*
-    case IMGFMT_RGBA:
-        return supported_flags;
-	*/
+    //case IMGFMT_RGBA:
+    //    return supported_flags;
     }
+	*/
     return 0;
 }
 
