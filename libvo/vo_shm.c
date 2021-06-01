@@ -74,6 +74,7 @@ struct header_t {
 	uint32_t format;
 	uint32_t frame_count;
 	uint32_t busy;
+	float fps;
 	unsigned char * image_buffer;
 } * header;
 
@@ -200,6 +201,7 @@ static uint32_t draw_image(mp_image_t *mpi)
 	header->stride = image_stride;
 	header->format = image_format;
 	header->frame_count = frame_count++;
+	header->fps = vo_fps;
 
 	if (!(mpi->flags & MP_IMGFLAG_DIRECT)) {
 		header->busy = 1;
@@ -208,6 +210,7 @@ static uint32_t draw_image(mp_image_t *mpi)
 	}
 
 	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] frame_count: %d\n", frame_count);
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] vo_fps: %f\n",vo_fps);
 
 	return VO_TRUE;
 }
