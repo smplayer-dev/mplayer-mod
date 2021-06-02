@@ -134,6 +134,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 		case IMGFMT_UYVY:
 			image_bytes = 2;
 			break;
+		default: image_bytes = 3;
 	}
 	// should be aligned, but that would break the shared buffer
 	image_stride = image_width * image_bytes;
@@ -228,6 +229,8 @@ static int query_format(uint32_t format)
 			return supportflags;
 		case IMGFMT_UYVY:
 			//pixelFormat = k2vuyPixelFormat;
+			return supportflags;
+		case IMGFMT_I420:
 			return supportflags;
 		case IMGFMT_YV12:
 			return supportflags;
