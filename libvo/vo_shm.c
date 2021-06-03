@@ -71,6 +71,7 @@ struct header_t {
 	uint32_t height;
 	uint32_t bytes;
 	uint32_t stride;
+	uint32_t planes;
 	uint32_t format;
 	uint32_t frame_count;
 	uint32_t busy;
@@ -153,7 +154,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 		return 1;
 	}
 
-	buffer_size = sizeof(header) + (image_height * image_stride);
+	buffer_size = sizeof(header) + (image_height * image_stride * 3);
 
 	if (ftruncate(shm_fd, buffer_size) == -1)
 	{
@@ -196,22 +197,46 @@ static void flip_page(void)
 
 static uint32_t draw_image(mp_image_t *mpi)
 {
-	header->width = image_width;
-	header->height = image_height;
+	image_bytes = mpi->stride[0] / mpi->width;
+	image_stride = mpi->stride[0];
+	header->width = mpi->width;
+	header->height = mpi->height;
 	header->bytes = image_bytes;
 	header->stride = image_stride;
+	header->planes = mpi->num_planes;
 	header->format = image_format;
 	header->frame_count = frame_count++;
 	header->fps = vo_fps;
 
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] buffer_size: %d\n", buffer_size);
+
 	if (!(mpi->flags & MP_IMGFLAG_DIRECT)) {
 		header->busy = 1;
-		memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
+		//memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
+		//memcpy_pic(image_data, mpi->planes[0], mpi->stride[0], mpi->height, mpi->stride[0], mpi->stride[0]);
+		//memcpy(image_data, mpi->planes[0], image_height * image_stride);//mpi->stride[0] * mpi->height * mpi->num_planes);
+		unsigned char * ptr = image_data;
+		for (int n = 0; n < mpi->num_planes-1; n++) {
+			uint32_t plane_size = mpi->stride[n] * mpi->height;
+			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] %d image_stride: %d size: %d\n", n, mpi->stride[n], plane_size);
+			//if (n == 2) plane_size -= 100000;
+			memcpy(ptr, mpi->planes[n], plane_size);
+			//memcpy_pic(ptr, mpi->planes[n], mpi->stride[n], mpi->height, mpi->stride[n], mpi->stride[n]);
+			ptr += plane_size;
+			//total_size += plane_size;
+		}
+		//memcpy(ptr, mpi->planes[0], total_size-100000);
+		//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] total_size: %d\n", total_size);
 		header->busy = 0;
 	}
 
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] num_planes: %d\n", mpi->num_planes);
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] stride[1]: %d\n", mpi->stride[0]);
 	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] frame_count: %d\n", frame_count);
 	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] vo_fps: %f\n",vo_fps);
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] image_bytes: %d\n", image_bytes);
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] width: %d bytes: %f\n", mpi->width, (float) mpi->stride[0] / mpi->width);
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] image_stride: %d mpi->stride: %d\n", image_stride, mpi->stride[0]);
 
 	return VO_TRUE;
 }
@@ -227,17 +252,25 @@ static int query_format(uint32_t format)
 		case IMGFMT_YUY2:
 			//pixelFormat = kYUVSPixelFormat;
 			return supportflags;
+		
 		case IMGFMT_UYVY:
 			//pixelFormat = k2vuyPixelFormat;
 			return supportflags;
+		*/
+		
 		case IMGFMT_I420:
 			return supportflags;
+		/*
 		case IMGFMT_YV12:
+			return supportflags;
+		/*
+		case IMGFMT_Y422:
 			return supportflags;
 		*/
 		case IMGFMT_RGB24:
 			//pixelFormat = k24RGBPixelFormat;
 			return supportflags;
+		
 		/*
 		case IMGFMT_ARGB:
 			//pixelFormat = k32ARGBPixelFormat;
@@ -248,9 +281,11 @@ static int query_format(uint32_t format)
 			//pixelFormat = k32BGRAPixelFormat;
 			return supportflags;
 		*/
+		/*
 		case IMGFMT_RGB16:
 			//pixelFormat = k32BGRAPixelFormat;
 			return supportflags;
+		*/
     }
     return 0;
 
@@ -269,6 +304,8 @@ static int query_format(uint32_t format)
 
 static int get_image(mp_image_t *mpi)
 {
+	return VO_FALSE;
+/*
     if (!(mpi->flags & (MP_IMGFLAG_ACCEPT_STRIDE | MP_IMGFLAG_ACCEPT_WIDTH)) ||
             (mpi->type != MP_IMGTYPE_TEMP && mpi->type != MP_IMGTYPE_STATIC))
         return VO_FALSE;
@@ -279,6 +316,7 @@ static int get_image(mp_image_t *mpi)
 	mpi->flags |=  MP_IMGFLAG_DIRECT;
 	mpi->flags &= ~MP_IMGFLAG_DRAW_CALLBACK;
 	return VO_TRUE;
+*/
 }
 
 static void uninit(void)
@@ -336,7 +374,7 @@ static int control(uint32_t request, void *data)
 	{
 		case VOCTRL_DRAW_IMAGE: return draw_image(data);
 		case VOCTRL_QUERY_FORMAT: return query_format(*(uint32_t*)data);
-		case VOCTRL_GET_IMAGE: return get_image(data);
+		//case VOCTRL_GET_IMAGE: return get_image(data);
 		/*
 		case VOCTRL_ONTOP: vo_ontop = !vo_ontop; if(!shared_buffer){ [mpGLView ontop]; } else { [mplayerosxProto ontop]; } return VO_TRUE;
 		case VOCTRL_ROOTWIN: vo_rootwin = !vo_rootwin; [mpGLView rootwin]; return VO_TRUE;
