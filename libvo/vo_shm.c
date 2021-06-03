@@ -216,7 +216,9 @@ static uint32_t draw_image(mp_image_t *mpi)
 		//memcpy_pic(image_data, mpi->planes[0], mpi->stride[0], mpi->height, mpi->stride[0], mpi->stride[0]);
 		//memcpy(image_data, mpi->planes[0], image_height * image_stride);//mpi->stride[0] * mpi->height * mpi->num_planes);
 		unsigned char * ptr = image_data;
-		for (int n = 0; n < mpi->num_planes-1; n++) {
+		int n_planes = mpi->num_planes;
+		if (n_planes == 3) n_planes--;
+		for (int n = 0; n < n_planes; n++) {
 			uint32_t plane_size = mpi->stride[n] * mpi->height;
 			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] %d image_stride: %d size: %d\n", n, mpi->stride[n], plane_size);
 			//if (n == 2) plane_size -= 100000;
