@@ -64,9 +64,11 @@ static uint32_t image_stride;
 static uint32_t image_format;
 static uint32_t frame_count = 0;
 static uint32_t buffer_size = 0;
+static uint32_t video_buffer_size = 0;
 
 struct header_t {
 	uint32_t header_size;
+	uint32_t video_buffer_size;
 	uint32_t width;
 	uint32_t height;
 	uint32_t bytes;
@@ -154,7 +156,8 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 		return 1;
 	}
 
-	buffer_size = sizeof(header) + (image_height * image_stride * 3);
+	video_buffer_size = (image_height * image_stride * 3);
+	buffer_size = sizeof(header) + video_buffer_size;
 
 	if (ftruncate(shm_fd, buffer_size) == -1)
 	{
@@ -178,6 +181,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 	image_data = (unsigned char*) &header->image_buffer;
 	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
 	header->header_size = sizeof(struct header_t);
+	header->video_buffer_size = video_buffer_size;
 
 	return 0;
 }
