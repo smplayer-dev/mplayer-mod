@@ -208,37 +208,18 @@ static uint32_t draw_image(mp_image_t *mpi)
 	header->frame_count = frame_count++;
 	header->fps = vo_fps;
 
-	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] buffer_size: %d\n", buffer_size);
-
 	if (!(mpi->flags & MP_IMGFLAG_DIRECT)) {
 		header->busy = 1;
-		//memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
-		//memcpy_pic(image_data, mpi->planes[0], mpi->stride[0], mpi->height, mpi->stride[0], mpi->stride[0]);
-		//memcpy(image_data, mpi->planes[0], image_height * image_stride);//mpi->stride[0] * mpi->height * mpi->num_planes);
-		unsigned char * ptr = image_data;
-		int n_planes = mpi->num_planes;
-		if (n_planes == 3) n_planes--;
-		for (int n = 0; n < n_planes; n++) {
-			uint32_t plane_size = mpi->stride[n] * mpi->height;
-			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] %d image_stride: %d size: %d\n", n, mpi->stride[n], plane_size);
-			//if (n == 2) plane_size -= 100000;
-			memcpy(ptr, mpi->planes[n], plane_size);
-			//memcpy_pic(ptr, mpi->planes[n], mpi->stride[n], mpi->height, mpi->stride[n], mpi->stride[n]);
-			ptr += plane_size;
-			//total_size += plane_size;
+		if (mpi->flags&MP_IMGFLAG_PLANAR) {
+			int size = (mpi->stride[0] * mpi->h) +
+                       (mpi->stride[1] * mpi->chroma_height) +
+                       (mpi->stride[2] * mpi->chroma_height);
+			memcpy(image_data, mpi->planes[0], size);
+		} else {
+			memcpy(image_data, mpi->planes[0], mpi->stride[0] * mpi->height);
 		}
-		//memcpy(ptr, mpi->planes[0], total_size-100000);
-		//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] total_size: %d\n", total_size);
 		header->busy = 0;
 	}
-
-	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] num_planes: %d\n", mpi->num_planes);
-	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] stride[1]: %d\n", mpi->stride[0]);
-	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] frame_count: %d\n", frame_count);
-	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] vo_fps: %f\n",vo_fps);
-	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] image_bytes: %d\n", image_bytes);
-	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] width: %d bytes: %f\n", mpi->width, (float) mpi->stride[0] / mpi->width);
-	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] image_stride: %d mpi->stride: %d\n", image_stride, mpi->stride[0]);
 
 	return VO_TRUE;
 }
