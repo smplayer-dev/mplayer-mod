@@ -141,19 +141,22 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d h: %d dw: %d dh: %d\n", width, height, d_width, d_height);
 
+	image_width = width;
+	image_height = height;
+	image_format = format;
+
+#if 0
 	mp_image_t * tmpi = alloc_mpi(width, height, format);
 	video_buffer_size = calculate_buffer_size(tmpi);
 	print_mpi(tmpi);
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] buffer size: %d\n", video_buffer_size);
 
-	image_width = width;
-	image_height = height;
-	image_format = format;
 	image_stride = tmpi->stride[0];
 	image_bytes = tmpi->bpp / 8;
 	//image_bytes = tmpi->stride[0] / tmpi->width;
 
-	/*
+	free_mp_image(tmpi);
+#else
 	switch (image_format)
 	{
 		case IMGFMT_RGB24:
@@ -169,13 +172,15 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 			image_bytes = 3;
 	}
 	image_stride = width * image_bytes;
-	*/
+	video_buffer_size = image_stride * height;
+	if (image_format == IMGFMT_I420) {
+		video_buffer_size = width * height * 2;
+	}
+#endif
 
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d h: %d format: %d\n", image_width, image_height, image_format);
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] stride: %d bytes: %d\n", image_stride, image_bytes);
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] video buffer size: %d\n", video_buffer_size);
-
-	free_mp_image(tmpi);
 
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer "
 			"named \"%s\"\n",buffer_name);
