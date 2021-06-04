@@ -138,14 +138,16 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 	free_file_specific();
 
 	mp_image_t * tmpi = alloc_mpi(width, height, format);
+	video_buffer_size = calculate_buffer_size(tmpi);
 	print_mpi(tmpi);
-	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] buffer size: %d\n", calculate_buffer_size(tmpi));
+	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] buffer size: %d\n", video_buffer_size);
 
-	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] image_format: %d\n", image_format);
-
-	//misc mplayer setup
 	image_width = width;
 	image_height = height;
+	image_format = format;
+	image_stride = tmpi->stride[0];
+	image_bytes = tmpi->bpp / 8;
+	//image_bytes = tmpi->stride[0] / tmpi->width;
 
 	/*
 	switch (image_format)
@@ -156,44 +158,20 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 		case IMGFMT_RGB16:
 			image_bytes = 2;
 			break;
-		case IMGFMT_ARGB:
-		case IMGFMT_BGRA:
-			image_bytes = 4;
-			break;
-		case IMGFMT_YUY2:
-		case IMGFMT_UYVY:
-			image_bytes = 2;
-			break;
-		default: image_bytes = 3;
-	}
-	// should be aligned, but that would break the shared buffer
-	image_stride = image_width * image_bytes;
-	*/
-
-	switch (image_format)
-	{
-		case IMGFMT_RGB24:
-			image_bytes = 3;
-			image_stride = width * image_bytes;
-			video_buffer_size = image_stride * height;
-			break;
-		case IMGFMT_RGB16:
-			image_bytes = 2;
-			image_stride = width * image_bytes;
-			video_buffer_size = image_stride * height;
-			break;
 		case IMGFMT_I420:
 			image_bytes = 1;
-			image_stride = width * image_bytes;
-			video_buffer_size = width * height + (((width/2) * (height/2)) * 2);
 			break;
 		default:
 			image_bytes = 3;
-			image_stride = width * image_bytes;
-			video_buffer_size = image_stride * height;
 	}
+	image_stride = width * image_bytes;
+	*/
 
-	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d h: %d stride: %d size: %d\n", image_width, image_height, image_stride, video_buffer_size);
+	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d h: %d format: %d\n", image_width, image_height, image_format);
+	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] stride: %d bytes: %d\n", image_stride, image_bytes);
+	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] video buffer size: %d\n", video_buffer_size);
+
+	free_mp_image(tmpi);
 
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer "
 			"named \"%s\"\n",buffer_name);
@@ -207,7 +185,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 		return 1;
 	}
 
-	video_buffer_size = (image_height * image_stride * 3);
+	video_buffer_size = image_stride * image_width * 3;
 	buffer_size = sizeof(header) + video_buffer_size;
 
 	if (ftruncate(shm_fd, buffer_size) == -1)
@@ -252,7 +230,8 @@ static void flip_page(void)
 
 static uint32_t draw_image(mp_image_t *mpi)
 {
-	image_bytes = mpi->stride[0] / mpi->width;
+	//image_bytes = mpi->stride[0] / mpi->width;
+	image_bytes = mpi->bpp / 8;
 	image_stride = mpi->stride[0];
 	header->width = mpi->width;
 	header->height = mpi->height;
@@ -270,6 +249,8 @@ static uint32_t draw_image(mp_image_t *mpi)
                        (mpi->stride[1] * mpi->chroma_height) +
                        (mpi->stride[2] * mpi->chroma_height);
 			memcpy(image_data, mpi->planes[0], size);
+			//memcpy(image_data, mpi->planes[0], video_buffer_size);
+			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d bpp: %d stride: %d\n", mpi->width, mpi->bpp, mpi->stride[0]);
 			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] size: %d\n", size);
 		} else {
 			int size = mpi->stride[0] * mpi->height;
