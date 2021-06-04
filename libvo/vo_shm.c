@@ -189,7 +189,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 		return 1;
 	}
 
-	video_buffer_size = image_stride * image_width * 3;
+	//video_buffer_size = image_stride * image_width * 3;
 	buffer_size = sizeof(header) + video_buffer_size;
 
 	if (ftruncate(shm_fd, buffer_size) == -1)
@@ -249,7 +249,7 @@ static uint32_t draw_image(mp_image_t *mpi)
 	header->frame_count = frame_count++;
 	header->fps = vo_fps;
 
-	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d h: %d stride: %d\n", mpi->width, mpi->height, mpi->stride[0]);
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d h: %d stride: %d\n", mpi->width, mpi->height, mpi->stride[0]);
 
 	if (!(mpi->flags & MP_IMGFLAG_DIRECT)) {
 		header->busy = 1;
