@@ -93,6 +93,8 @@ LIBVO_EXTERN(shm)
 
 static void draw_alpha(int x0, int y0, int w, int h, unsigned char *src, unsigned char *srca, int stride)
 {
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] draw_alpha: %d %d stride: %d image_width: %d\n", w, h, stride, image_width);
+
 	unsigned char *dst = image_data + image_bytes * (y0 * image_width + x0);
 	vo_draw_alpha_func draw = vo_get_draw_alpha(image_format);
 	if (!draw) return;
@@ -136,6 +138,8 @@ static int calculate_buffer_size(mp_image_t * mpi) {
 static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
 	free_file_specific();
+
+	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d h: %d dw: %d dh: %d\n", width, height, d_width, d_height);
 
 	mp_image_t * tmpi = alloc_mpi(width, height, format);
 	video_buffer_size = calculate_buffer_size(tmpi);
@@ -230,11 +234,14 @@ static void flip_page(void)
 
 static uint32_t draw_image(mp_image_t *mpi)
 {
-	//image_bytes = mpi->stride[0] / mpi->width;
+	/*
+	image_width = mpi->width;
+	image_height = mpi->height;
 	image_bytes = mpi->bpp / 8;
 	image_stride = mpi->stride[0];
-	header->width = mpi->width;
-	header->height = mpi->height;
+	*/
+	header->width = image_width;
+	header->height = image_height;
 	header->bytes = image_bytes;
 	header->stride = image_stride;
 	header->planes = mpi->num_planes;
@@ -242,19 +249,32 @@ static uint32_t draw_image(mp_image_t *mpi)
 	header->frame_count = frame_count++;
 	header->fps = vo_fps;
 
+	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d h: %d stride: %d\n", mpi->width, mpi->height, mpi->stride[0]);
+
 	if (!(mpi->flags & MP_IMGFLAG_DIRECT)) {
 		header->busy = 1;
 		if (mpi->flags&MP_IMGFLAG_PLANAR) {
+			/*
 			int size = (mpi->stride[0] * mpi->h) +
                        (mpi->stride[1] * mpi->chroma_height) +
                        (mpi->stride[2] * mpi->chroma_height);
 			memcpy(image_data, mpi->planes[0], size);
-			//memcpy(image_data, mpi->planes[0], video_buffer_size);
+			*/
+			unsigned char * ptr = image_data;
+			int size = image_stride * image_height;
+			memcpy_pic(ptr, mpi->planes[0], image_width, image_height, image_stride, mpi->stride[0]);
+			ptr += size;
+			size = mpi->chroma_width * mpi->chroma_height;
+			memcpy_pic(ptr, mpi->planes[1], mpi->chroma_width, mpi->chroma_height, mpi->chroma_width, mpi->stride[1]);
+			ptr += size;
+			memcpy_pic(ptr, mpi->planes[2], mpi->chroma_width, mpi->chroma_height, mpi->chroma_width, mpi->stride[2]);
 			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d bpp: %d stride: %d\n", mpi->width, mpi->bpp, mpi->stride[0]);
 			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] size: %d\n", size);
 		} else {
 			int size = mpi->stride[0] * mpi->height;
-			memcpy(image_data, mpi->planes[0], size);
+			//memcpy(image_data, mpi->planes[0], size);
+			//memcpy_pic(image_data, mpi->planes[0], mpi->stride[0], image_height, mpi->stride[0], mpi->stride[0]);
+			memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
 			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d bpp: %d stride: %d\n", mpi->width, mpi->bpp, mpi->stride[0]);
 			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] size: %d\n", size);
 		}
