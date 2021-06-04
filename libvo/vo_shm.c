@@ -121,6 +121,8 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 	//misc mplayer setup
 	image_width = width;
 	image_height = height;
+
+	/*
 	switch (image_format)
 	{
 		case IMGFMT_RGB24:
@@ -141,8 +143,32 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 	}
 	// should be aligned, but that would break the shared buffer
 	image_stride = image_width * image_bytes;
+	*/
 
-	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] %d %d %d\n", image_width, image_height, image_stride);
+	switch (image_format)
+	{
+		case IMGFMT_RGB24:
+			image_bytes = 3;
+			image_stride = width * image_bytes;
+			video_buffer_size = image_stride * height;
+			break;
+		case IMGFMT_RGB16:
+			image_bytes = 2;
+			image_stride = width * image_bytes;
+			video_buffer_size = image_stride * height;
+			break;
+		case IMGFMT_I420:
+			image_bytes = 1;
+			image_stride = width * image_bytes;
+			video_buffer_size = width * height + (((width/2) * (height/2)) * 2);
+			break;
+		default:
+			image_bytes = 3;
+			image_stride = width * image_bytes;
+			video_buffer_size = image_stride * height;
+	}
+
+	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d h: %d stride: %d size: %d\n", image_width, image_height, image_stride, video_buffer_size);
 
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer "
 			"named \"%s\"\n",buffer_name);
@@ -219,8 +245,12 @@ static uint32_t draw_image(mp_image_t *mpi)
                        (mpi->stride[1] * mpi->chroma_height) +
                        (mpi->stride[2] * mpi->chroma_height);
 			memcpy(image_data, mpi->planes[0], size);
+			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] size: %d\n", size);
 		} else {
-			memcpy(image_data, mpi->planes[0], mpi->stride[0] * mpi->height);
+			int size = mpi->stride[0] * mpi->height;
+			memcpy(image_data, mpi->planes[0], size);
+			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d bpp: %d stride: %d\n", mpi->width, mpi->bpp, mpi->stride[0]);
+			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] size: %d\n", size);
 		}
 		header->busy = 0;
 	}
@@ -268,11 +298,9 @@ static int query_format(uint32_t format)
 			//pixelFormat = k32BGRAPixelFormat;
 			return supportflags;
 		*/
-		/*
 		case IMGFMT_RGB16:
 			//pixelFormat = k32BGRAPixelFormat;
 			return supportflags;
-		*/
     }
     return 0;
 
