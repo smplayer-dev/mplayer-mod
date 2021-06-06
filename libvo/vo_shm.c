@@ -1,5 +1,5 @@
 /*
- * CoreVideo video output driver
+ * Shm video output driver
  * Copyright (c) 2021 Ricardo Villalba <ricardo@smplayer.info>
  * Copyright (c) 2005 Nicolas Plourde <nicolasplourde@gmail.com>
  *
@@ -92,8 +92,6 @@ LIBVO_EXTERN(shm)
 
 static void draw_alpha(int x0, int y0, int w, int h, unsigned char *src, unsigned char *srca, int stride)
 {
-	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] draw_alpha: %d %d stride: %d image_width: %d\n", w, h, stride, image_width);
-
 	unsigned char *dst = image_data + image_bytes * (y0 * image_width + x0);
 	vo_draw_alpha_func draw = vo_get_draw_alpha(image_format);
 	if (!draw) return;
@@ -140,8 +138,6 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 {
 	free_file_specific();
 
-	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d h: %d dw: %d dh: %d\n", width, height, d_width, d_height);
-
 	image_width = width;
 	image_height = height;
 	image_format = format;
@@ -184,7 +180,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] video buffer size: %d\n", video_buffer_size);
 
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer "
-			"named \"%s\"\n",buffer_name);
+			"named \"%s\"\n", buffer_name);
 
 	// Create shared memory
 	shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
