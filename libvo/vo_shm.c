@@ -216,10 +216,13 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 		shm_unlink(buffer_name);
 		return 1;
 	}
-	image_data = (unsigned char*) &header->image_buffer;
-	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
+
 	header->header_size = sizeof(struct header_t);
 	header->video_buffer_size = video_buffer_size;
+
+	//image_data = (unsigned char*) &header->image_buffer;
+	image_data = (unsigned char*) header + header->header_size;
+	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
 
 	return 0;
 }
