@@ -1,0 +1,43 @@
+name: Build on MacOS
+env:
+  version: '1.4'
+
+on: [workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          path: MPlayer-${{env.version}}
+
+      - name: List
+        run: ls -l
+
+      - name: Install dependencies
+        run: brew install yasm nasm pkg-config libass ffmpeg create-dmg
+        
+      - name: Build
+        run: |
+            cd MPlayer-${{env.version}}
+            ./configure --disable-libmpeg2-internal \
+                        --disable-ffmpeg_a \
+                        --disable-gui \
+                        --disable-mencoder \
+                        --enable-runtime-cpudetection
+            make -j4
+
+      - name: Build package
+        run: |
+            cd MPlayer-${{env.version}}
+            ls -l
+
+      - name: Create artifact
+        #if: ${{ false }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: mplayer
+          path: ./MPlayer-${{env.version}}/mplayer
