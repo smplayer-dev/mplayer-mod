@@ -1,4 +1,4 @@
-name: Build mplayer
+name: Build on Ubuntu
 env:
   version: '1.4'
 
