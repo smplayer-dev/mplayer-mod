@@ -48,17 +48,13 @@
 
 #include "osdep/keycodes.h"
 
-//shared memory
-static int shared_buffer = 0;
+// Shared memory
 #define DEFAULT_BUFFER_NAME "mplayer"
-static char *buffer_name;
+static char * buffer_name;
 static int shm_fd = 0;
 
-//Screen
-static int screen_id = -1;
-
-//image
-static unsigned char *image_data;
+// Image
+static unsigned char * image_data;
 
 static uint32_t image_width;
 static uint32_t image_height;
@@ -188,7 +184,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer "
 			"named \"%s\"\n",buffer_name);
 
-	// create shared memory
+	// Create shared memory
 	shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
 	if (shm_fd == -1)
 	{
@@ -279,7 +275,6 @@ static uint32_t draw_image(mp_image_t *mpi)
 static int query_format(uint32_t format)
 {
     const int supportflags = VFCAP_CSP_SUPPORTED | VFCAP_CSP_SUPPORTED_BY_HW | VFCAP_OSD | VFCAP_HWSCALE_UP | VFCAP_HWSCALE_DOWN | VFCAP_ACCEPT_STRIDE | VOCAP_NOSLICES;
-    //image_format = format;
 
     switch(format)
 	{
@@ -311,18 +306,14 @@ static void uninit(void)
 }
 
 static const opt_t subopts[] = {
-{"device_id",     OPT_ARG_INT,  &screen_id,     NULL},
-{"shared_buffer", OPT_ARG_BOOL, &shared_buffer, NULL},
-{"buffer_name",   OPT_ARG_MSTRZ,&buffer_name,   NULL},
+{"buffer_name",  OPT_ARG_MSTRZ, &buffer_name, NULL},
 {NULL}
 };
 
 static int preinit(const char *arg)
 {
 
-	// set defaults
-	screen_id = -1;
-	shared_buffer = 0;
+	// Set defaults
 	buffer_name = NULL;
 
 	if (subopt_parse(arg, subopts) != 0) {
@@ -345,8 +336,6 @@ static int preinit(const char *arg)
 
 	if (!buffer_name)
 		buffer_name = strdup(DEFAULT_BUFFER_NAME);
-	else
-		shared_buffer = 1;
 
     return 0;
 }
