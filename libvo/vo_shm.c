@@ -239,12 +239,6 @@ static void flip_page(void)
 
 static uint32_t draw_image(mp_image_t *mpi)
 {
-	/*
-	image_width = mpi->width;
-	image_height = mpi->height;
-	image_bytes = mpi->bpp / 8;
-	image_stride = mpi->stride[0];
-	*/
 	header->width = image_width;
 	header->height = image_height;
 	header->bytes = image_bytes;
@@ -259,12 +253,6 @@ static uint32_t draw_image(mp_image_t *mpi)
 	if (!(mpi->flags & MP_IMGFLAG_DIRECT)) {
 		header->busy = 1;
 		if (mpi->flags&MP_IMGFLAG_PLANAR) {
-			/*
-			int size = (mpi->stride[0] * mpi->h) +
-                       (mpi->stride[1] * mpi->chroma_height) +
-                       (mpi->stride[2] * mpi->chroma_height);
-			memcpy(image_data, mpi->planes[0], size);
-			*/
 			unsigned char * ptr = image_data;
 			int size = image_stride * image_height;
 			memcpy_pic(ptr, mpi->planes[0], image_width, image_height, image_stride, mpi->stride[0]);
@@ -273,15 +261,9 @@ static uint32_t draw_image(mp_image_t *mpi)
 			memcpy_pic(ptr, mpi->planes[1], mpi->chroma_width, mpi->chroma_height, mpi->chroma_width, mpi->stride[1]);
 			ptr += size;
 			memcpy_pic(ptr, mpi->planes[2], mpi->chroma_width, mpi->chroma_height, mpi->chroma_width, mpi->stride[2]);
-			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d bpp: %d stride: %d\n", mpi->width, mpi->bpp, mpi->stride[0]);
-			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] size: %d\n", size);
 		} else {
 			int size = mpi->stride[0] * mpi->height;
-			//memcpy(image_data, mpi->planes[0], size);
-			//memcpy_pic(image_data, mpi->planes[0], mpi->stride[0], image_height, mpi->stride[0], mpi->stride[0]);
 			memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
-			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d bpp: %d stride: %d\n", mpi->width, mpi->bpp, mpi->stride[0]);
-			//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] size: %d\n", size);
 		}
 		header->busy = 0;
 	}
@@ -296,73 +278,23 @@ static int query_format(uint32_t format)
 
     switch(format)
 	{
-		/*
-		case IMGFMT_YUY2:
-			//pixelFormat = kYUVSPixelFormat;
-			return supportflags;
-		
-		case IMGFMT_UYVY:
-			//pixelFormat = k2vuyPixelFormat;
-			return supportflags;
-		*/
-		
 		case IMGFMT_I420:
 			return supportflags;
 		/*
 		case IMGFMT_YV12:
 			return supportflags;
-		/*
-		case IMGFMT_Y422:
-			return supportflags;
 		*/
 		case IMGFMT_RGB24:
-			//pixelFormat = k24RGBPixelFormat;
 			return supportflags;
-		
-		/*
-		case IMGFMT_ARGB:
-			//pixelFormat = k32ARGBPixelFormat;
-			return supportflags;
-		*/
-		/*
-		case IMGFMT_BGRA:
-			//pixelFormat = k32BGRAPixelFormat;
-			return supportflags;
-		*/
 		case IMGFMT_RGB16:
-			//pixelFormat = k32BGRAPixelFormat;
 			return supportflags;
     }
-    return 0;
-
-	/*
-    const int supported_flags = VFCAP_CSP_SUPPORTED|VFCAP_CSP_SUPPORTED_BY_HW|VFCAP_ACCEPT_STRIDE;
-    image_format = format;
-    switch(format){
-    case IMGFMT_RGB24:
-        return  supported_flags;
-    //case IMGFMT_RGBA:
-    //    return supported_flags;
-    }
-	*/
     return 0;
 }
 
 static int get_image(mp_image_t *mpi)
 {
 	return VO_FALSE;
-/*
-    if (!(mpi->flags & (MP_IMGFLAG_ACCEPT_STRIDE | MP_IMGFLAG_ACCEPT_WIDTH)) ||
-            (mpi->type != MP_IMGTYPE_TEMP && mpi->type != MP_IMGTYPE_STATIC))
-        return VO_FALSE;
-
-	// mpi should not be planar format here
-	mpi->planes[0] = image_data;
-	mpi->stride[0] = image_stride;
-	mpi->flags |=  MP_IMGFLAG_DIRECT;
-	mpi->flags &= ~MP_IMGFLAG_DRAW_CALLBACK;
-	return VO_TRUE;
-*/
 }
 
 static void uninit(void)
@@ -420,20 +352,6 @@ static int control(uint32_t request, void *data)
 	{
 		case VOCTRL_DRAW_IMAGE: return draw_image(data);
 		case VOCTRL_QUERY_FORMAT: return query_format(*(uint32_t*)data);
-		//case VOCTRL_GET_IMAGE: return get_image(data);
-		/*
-		case VOCTRL_ONTOP: vo_ontop = !vo_ontop; if(!shared_buffer){ [mpGLView ontop]; } else { [mplayerosxProto ontop]; } return VO_TRUE;
-		case VOCTRL_ROOTWIN: vo_rootwin = !vo_rootwin; [mpGLView rootwin]; return VO_TRUE;
-		case VOCTRL_FULLSCREEN: vo_fs = !vo_fs; if(!shared_buffer){ [mpGLView fullscreen: NO]; } else { [mplayerosxProto toggleFullscreen]; } return VO_TRUE;
-		case VOCTRL_GET_PANSCAN: return VO_TRUE;
-		case VOCTRL_SET_PANSCAN: panscan_calc(); return VO_TRUE;
-		case VOCTRL_UPDATE_SCREENINFO:
-			if (shared_buffer)
-				update_screen_info_shared_buffer();
-			else
-				[mpGLView update_screen_info];
-			return VO_TRUE;
-		*/
 	}
 	return VO_NOTIMPL;
 }
