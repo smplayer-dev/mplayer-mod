@@ -262,8 +262,7 @@ static uint32_t draw_image(mp_image_t *mpi)
 			ptr += size;
 			memcpy_pic(ptr, mpi->planes[2], mpi->chroma_width, mpi->chroma_height, mpi->chroma_width, mpi->stride[2]);
 		} else {
-			int size = mpi->stride[0] * mpi->height;
-			memcpy_pic(image_data, mpi->planes[0], image_width*image_bytes, image_height, image_stride, mpi->stride[0]);
+			memcpy_pic(image_data, mpi->planes[0], image_width * image_bytes, image_height, image_stride, mpi->stride[0]);
 		}
 		header->busy = 0;
 	}
