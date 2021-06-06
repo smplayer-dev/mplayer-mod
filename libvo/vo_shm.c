@@ -78,7 +78,7 @@ struct header_t {
 	uint32_t frame_count;
 	uint32_t busy;
 	float fps;
-	unsigned char * image_buffer;
+	//unsigned char * image_buffer;
 } * header;
 
 static vo_info_t info =
