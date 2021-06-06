@@ -1,5 +1,6 @@
 /*
  * CoreVideo video output driver
+ * Copyright (c) 2021 Ricardo Villalba <ricardo@smplayer.info>
  * Copyright (c) 2005 Nicolas Plourde <nicolasplourde@gmail.com>
  *
  * This file is part of MPlayer.
@@ -18,6 +19,8 @@
  * with MPlayer; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+
+/* Based on vo_corevideo.m by Nicolas Plourde <nicolas.plourde@gmail.com> */
 
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -85,7 +88,7 @@ static vo_info_t info =
 {
 	"Shared Memory",
 	"shm",
-	"Nicolas Plourde <nicolas.plourde@gmail.com>",
+	"Ricardo Villalba <ricardo@smplayer.info>",
 	""
 };
 
