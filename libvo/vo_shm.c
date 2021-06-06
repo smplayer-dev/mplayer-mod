@@ -113,6 +113,7 @@ static void update_screen_info_shared_buffer(void)
 {
 }
 
+#if 0
 static void print_mpi(mp_image_t * mpi) {
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] mpi: %d %d planes: %d bpp: %d\n", mpi->width, mpi->height, mpi->num_planes, mpi->bpp);
 	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] mpi: chroma_width: %d chroma_height: %d\n", mpi->chroma_width, mpi->chroma_height);
@@ -133,6 +134,7 @@ static int calculate_buffer_size(mp_image_t * mpi) {
 	}
 	return size;
 }
+#endif
 
 static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
