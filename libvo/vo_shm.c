@@ -319,17 +319,11 @@ static int preinit(const char *arg)
 	if (subopt_parse(arg, subopts) != 0) {
 		mp_msg(MSGT_VO, MSGL_FATAL,
 				"\n-vo shm command line help:\n"
-				"Example: mplayer -vo shm:device_id=1:shared_buffer:buffer_name=mybuff\n"
+				"Example: mplayer -vo shm:buffer_name=mybuff\n"
 				"\nOptions:\n"
-				"  device_id=<0-...>\n"
-				"    DEPRECATED, use -xineramascreen instead.\n"
-				"    Set screen device ID for fullscreen.\n"
-				"  shared_buffer\n"
-				"    Write output to a shared memory buffer instead of displaying it.\n"
 				"  buffer_name=<name>\n"
-				"    Name of the shared buffer created with shm_open() as well as\n"
-				"    the name of the NSConnection MPlayer will try to open.\n"
-				"    Setting buffer_name implicitly enables shared_buffer.\n"
+				"    Name of the shared buffer created with shm_open().\n"
+				"    If not set it will use 'mplayer' as name.\n"
 				"\n" );
 		return -1;
 	}
