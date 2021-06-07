@@ -35,7 +35,7 @@ jobs:
             cd MPlayer-${{env.version}}
             mkdir -p mplayer.app/Contents/MacOS/
             cp mplayer mplayer.app/Contents/MacOS/
-            dylibbundler -od -b -x ./mplayer.app/Contents/MacOS/mplayer -d ./mplayer.app/Contents/libs/
+            dylibbundler -od -b -x ./mplayer.app/Contents/MacOS/mplayer -d ./mplayer.app/Contents/MacOS/lib
 
       - name: Create artifact
         #if: ${{ false }}
