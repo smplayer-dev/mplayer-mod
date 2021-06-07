@@ -18,7 +18,7 @@ jobs:
         run: ls -l
 
       - name: Install dependencies
-        run: brew install yasm nasm pkg-config libass ffmpeg create-dmg
+        run: brew install yasm nasm pkg-config libass ffmpeg create-dmg dylibbundler
         
       - name: Build
         run: |
@@ -33,11 +33,13 @@ jobs:
       - name: Build package
         run: |
             cd MPlayer-${{env.version}}
-            ls -l
+            mkdir -p mplayer.app/Contents/MacOS/
+            cp mplayer mplayer.app/Contents/MacOS/
+            dylibbundler -od -b -x ./mplayer.app/Contents/MacOS/mplayer -d ./mplayer.app/Contents/libs/
 
       - name: Create artifact
         #if: ${{ false }}
         uses: actions/upload-artifact@v2
         with:
           name: mplayer
-          path: ./MPlayer-${{env.version}}/mplayer
+          path: ./MPlayer-${{env.version}}/mplayer.app
