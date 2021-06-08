@@ -33,13 +33,13 @@ jobs:
       - name: Build package
         run: |
             cd MPlayer-${{env.version}}
-            mkdir -p mplayer.app/Contents/MacOS/
-            cp mplayer mplayer.app/Contents/MacOS/
-            dylibbundler -od -b -x ./mplayer.app/Contents/MacOS/mplayer -d ./mplayer.app/Contents/MacOS/lib -p @executable_path/lib
+            mkdir -p package/mplayer.app/Contents/MacOS/
+            cp mplayer package/mplayer.app/Contents/MacOS/
+            dylibbundler -od -b -x ./package/mplayer.app/Contents/MacOS/mplayer -d ./package/mplayer.app/Contents/MacOS/lib -p @executable_path/lib
 
       - name: Create artifact
         #if: ${{ false }}
         uses: actions/upload-artifact@v2
         with:
           name: mplayer
-          path: ./MPlayer-${{env.version}}/mplayer.app/
+          path: ./MPlayer-${{env.version}}/package/
