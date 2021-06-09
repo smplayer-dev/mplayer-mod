@@ -2,7 +2,10 @@ name: Build on MacOS
 env:
   version: '1.4'
 
-on: [workflow_dispatch]
+on: 
+  workflow_dispatch:
+  release:
+    types: [published]
 
 jobs:
   build:
