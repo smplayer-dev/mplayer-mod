@@ -36,10 +36,12 @@ jobs:
             mkdir -p package/mplayer.app/Contents/MacOS/
             cp mplayer package/mplayer.app/Contents/MacOS/
             dylibbundler -od -b -x ./package/mplayer.app/Contents/MacOS/mplayer -d ./package/mplayer.app/Contents/MacOS/lib -p @executable_path/lib
+            cd package
+            tar -cvjf mplayer.tar.bz2 mplayer.app/
 
       - name: Create artifact
         #if: ${{ false }}
         uses: actions/upload-artifact@v2
         with:
           name: mplayer
-          path: ./MPlayer-${{env.version}}/package/
+          path: ./MPlayer-${{env.version}}/package/mplayer.tar.bz2
