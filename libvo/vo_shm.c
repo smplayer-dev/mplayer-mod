@@ -100,11 +100,13 @@ static void draw_alpha(int x0, int y0, int w, int h, unsigned char *src, unsigne
 
 static void free_file_specific(void)
 {
-	if (munmap(header, buffer_size) == -1)
-		mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: munmap failed. Error: %s\n", strerror(errno));
+	if (munmap(header, buffer_size) == -1) {
+		//mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: munmap failed. Error: %s\n", strerror(errno));
+	}
 
-	if (shm_unlink(buffer_name) == -1)
-		mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: shm_unlink failed. Error: %s\n", strerror(errno));
+	if (shm_unlink(buffer_name) == -1) {
+		//mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: shm_unlink failed. Error: %s\n", strerror(errno));
+	}
 }
 
 static void update_screen_info_shared_buffer(void)
@@ -223,7 +225,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 
 	//image_data = (unsigned char*) &header->image_buffer;
 	image_data = (unsigned char*) header + header->header_size;
-	mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
+	//mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
 
 	return 0;
 }
