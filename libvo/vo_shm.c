@@ -166,6 +166,7 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 			image_bytes = 1;
 			break;
 		case IMGFMT_YUY2:
+		case IMGFMT_UYVY:
 			image_bytes = 2;
 			break;
 		default:
@@ -282,6 +283,8 @@ static int query_format(uint32_t format)
 		case IMGFMT_I420:
 			return supportflags;
 		case IMGFMT_YUY2:
+			return supportflags;
+		case IMGFMT_UYVY:
 			return supportflags;
 		case IMGFMT_RGB24:
 			return supportflags;
