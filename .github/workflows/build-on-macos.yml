@@ -40,21 +40,21 @@ jobs:
             cp mplayer package/mplayer.app/Contents/MacOS/
             dylibbundler -od -b -x ./package/mplayer.app/Contents/MacOS/mplayer -d ./package/mplayer.app/Contents/MacOS/lib -p @executable_path/lib
             cd package
-            tar -cvjf mplayer.tar.bz2 mplayer.app/
+            tar -cvjf mplayer-macos.tar.bz2 mplayer.app/
 
       - name: Create artifact
         #if: ${{ false }}
         uses: actions/upload-artifact@v2
         with:
-          name: mplayer
-          path: ./MPlayer-${{env.version}}/package/mplayer.tar.bz2
+          name: mplayer-macos
+          path: ./MPlayer-${{env.version}}/package/mplayer-macos.tar.bz2
 
       - name: Upload package to release
         if: github.event_name == 'release'
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          file: ./MPlayer-${{env.version}}/package/mplayer.tar.bz2
+          file: ./MPlayer-${{env.version}}/package/mplayer-macos.tar.bz2
           tag: ${{ github.ref }}
           overwrite: true
           file_glob: true
