@@ -55,6 +55,11 @@ jobs:
             fakeroot debian/rules binary -j4
             ls -l ../*.deb
 
+      - name: Rename package
+        run:  |
+            sudo apt-get -y install rename
+            rename 's/mplayer_/mplayer-mod_/' mplayer_*.deb
+
       - name: Create artifact
         #if: ${{ false }}
         uses: actions/upload-artifact@v2
