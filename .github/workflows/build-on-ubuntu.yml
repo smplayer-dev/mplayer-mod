@@ -14,8 +14,8 @@ jobs:
       matrix:
         config:
           - { name: 'xenial', os: 'ubuntu-latest', container: 'wachii/ubuntu-qt:16.04' }
-          - { name: 'bionic', os: 'ubuntu-18.04', container: '' }
-          - { name: 'focal', os: 'ubuntu-20.04', container: '' }
+          #- { name: 'bionic', os: 'ubuntu-18.04', container: '' }
+          #- { name: 'focal', os: 'ubuntu-20.04', container: '' }
 
     runs-on: ${{ matrix.config.os }}
     container: ${{ matrix.config.container }}
@@ -28,12 +28,13 @@ jobs:
 
       - name: Install debian dir
         run: |
-            git clone https://github.com/smplayer-dev/mplayer-build.git debian
-            cp debian/debian/* MPlayer-${{env.version}}/debian/
+            #git clone https://github.com/smplayer-dev/mplayer-build.git debian
+            #cp debian/debian/* MPlayer-${{env.version}}/debian/
+            cp debian-mod/* MPlayer-${{env.version}}/debian/
       
-      #- name: Add ffmpeg repository
-      #  if: ${{ matrix.config.name == 'xenial' || matrix.config.name == 'bionic' }}
-      #  run: sudo add-apt-repository -y ppa:jonathonf/ffmpeg-4
+      - name: Add ffmpeg repository
+        if: ${{ matrix.config.name == 'xenial' || matrix.config.name == 'bionic' }}
+        run: sudo add-apt-repository -y ppa:jonathonf/ffmpeg-4
 
       - name: Install devscripts
         run: |
