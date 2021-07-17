@@ -30,7 +30,8 @@ jobs:
         run: |
             #git clone https://github.com/smplayer-dev/mplayer-build.git debian
             #cp debian/debian/* MPlayer-${{env.version}}/debian/
-            cp debian-mod/* MPlayer-${{env.version}}/debian/
+            cd MPlayer-${{env.version}}
+            cp debian-mod/* debian/
       
       - name: Add ffmpeg repository
         if: ${{ matrix.config.name == 'xenial' || matrix.config.name == 'bionic' }}
