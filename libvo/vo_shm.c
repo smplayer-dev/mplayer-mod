@@ -71,7 +71,7 @@ struct header_t {
     uint32_t width;
     uint32_t height;
     uint32_t bytes;
-    uint32_t stride;
+    uint32_t stride[3];
     uint32_t planes;
     uint32_t format;
     uint32_t frame_count;
@@ -245,7 +245,12 @@ static uint32_t draw_image(mp_image_t *mpi)
     header->width = image_width;
     header->height = image_height;
     header->bytes = image_bytes;
-    header->stride = image_stride;
+    header->stride[0] = image_stride;
+    if (mpi->flags&MP_IMGFLAG_PLANAR) {
+        header->stride[1] = header->stride[2] = image_width / 2;
+    } else {
+        header->stride[1] = header->stride[2] = 0;
+    }
     header->planes = mpi->num_planes;
     header->format = image_format;
     header->frame_count = frame_count++;
