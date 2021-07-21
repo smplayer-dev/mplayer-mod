@@ -122,29 +122,6 @@ static void update_screen_info_shared_buffer(void)
 {
 }
 
-#if 0
-static void print_mpi(mp_image_t * mpi) {
-    mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] mpi: %d %d planes: %d bpp: %d\n", mpi->width, mpi->height, mpi->num_planes, mpi->bpp);
-    mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] mpi: chroma_width: %d chroma_height: %d\n", mpi->chroma_width, mpi->chroma_height);
-    for (int n = 0; n < mpi->num_planes; n++) {
-        mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] mpi: stride plane %d: %d\n", n, mpi->stride[n]);
-    }
-}
-
-static int calculate_buffer_size(mp_image_t * mpi) {
-    int size = 0;
-    if (mpi->flags&MP_IMGFLAG_PLANAR) {
-        size = (mpi->stride[0] * mpi->h) +
-               (mpi->stride[1] * mpi->chroma_height) +
-               (mpi->stride[2] * mpi->chroma_height);
-        //mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] size: %d\n", size);
-    } else {
-        size = mpi->stride[0] * mpi->height;
-    }
-    return size;
-}
-#endif
-
 static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
     free_buffers();
@@ -153,18 +130,6 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
     image_height = height;
     image_format = format;
 
-#if 0
-    mp_image_t * tmpi = alloc_mpi(width, height, format);
-    video_buffer_size = calculate_buffer_size(tmpi);
-    print_mpi(tmpi);
-    mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] buffer size: %d\n", video_buffer_size);
-
-    image_stride = tmpi->stride[0];
-    image_bytes = tmpi->bpp / 8;
-    //image_bytes = tmpi->stride[0] / tmpi->width;
-
-    free_mp_image(tmpi);
-#else
     switch (image_format)
     {
         case IMGFMT_RGB24:
@@ -188,14 +153,12 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
     if (image_format == IMGFMT_I420) {
         video_buffer_size = width * height * 2;
     }
-#endif
 
     mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] w: %d h: %d format: %d\n", image_width, image_height, image_format);
     mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] stride: %d bytes: %d\n", image_stride, image_bytes);
     mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] video buffer size: %d\n", video_buffer_size);
 
-    mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer "
-            "named \"%s\"\n", buffer_name);
+    mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] writing output to a shared buffer named \"%s\"\n", buffer_name);
 
     // Create shared memory
     shm_fd = shm_open(buffer_name, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR);
