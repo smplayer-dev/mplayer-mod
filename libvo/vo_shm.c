@@ -107,7 +107,7 @@ static void draw_alpha(int x0, int y0, int w, int h, unsigned char *src, unsigne
     draw(w,h,src,srca,stride,dst,image_stride);
 }
 
-static void free_file_specific(void)
+static void free_buffers(void)
 {
     if (munmap(header, buffer_size) == -1) {
         //mp_msg(MSGT_VO, MSGL_FATAL, "[vo_shm] uninit: munmap failed. Error: %s\n", strerror(errno));
@@ -147,7 +147,7 @@ static int calculate_buffer_size(mp_image_t * mpi) {
 
 static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_height, uint32_t flags, char *title, uint32_t format)
 {
-    free_file_specific();
+    free_buffers();
 
     image_width = width;
     image_height = height;
@@ -318,7 +318,7 @@ static int get_image(mp_image_t *mpi)
 
 static void uninit(void)
 {
-    free_file_specific();
+    free_buffers();
 
     free(buffer_name);
     buffer_name = NULL;
