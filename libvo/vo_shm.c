@@ -77,6 +77,16 @@ struct header_t {
     uint32_t frame_count;
     uint32_t busy;
     float fps;
+    // MPV
+    int32_t rotate;
+    int32_t colorspace;
+    int32_t colorspace_levels;
+    int32_t colorspace_primaries;
+    int32_t colorspace_gamma;
+    int32_t colorspace_light;
+    float colorspace_sig_peak;
+    int32_t chroma_location;
+    uint32_t reserved[20];
 } * header;
 
 static vo_info_t info =
@@ -223,6 +233,9 @@ static int config(uint32_t width, uint32_t height, uint32_t d_width, uint32_t d_
 
     image_data = (unsigned char*) header + header->header_size;
     //mp_msg(MSGT_VO, MSGL_INFO, "[vo_shm] header: %p image_data: %p\n", header, image_data);
+
+    header->rotate = header->colorspace = header->colorspace_levels = header->colorspace_primaries =
+    header->colorspace_gamma = header->colorspace_light = header->colorspace_sig_peak = header->chroma_location = 0;
 
     return 0;
 }
