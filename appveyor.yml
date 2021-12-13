@@ -1,4 +1,4 @@
-version: '{build}'
+version: 1.4.b{build}-{branch}
 image: macos-mojave
 #image: macos
 
@@ -12,14 +12,15 @@ environment:
 install: |-
   git config --global http.sslVerify false
   export PATH="/usr/local/Cellar/pkg-config/0.29.2_3/bin:${PATH}"
-  brew install dylibbundler
-  brew install yasm nasm libass ffmpeg
+  sudo rm -rf /Library/Frameworks/Mono.framework/
+  brew install dylibbundler yasm nasm libass ffmpeg
   
 build_script: |-
   ./configure --disable-libmpeg2-internal \
               --disable-ffmpeg_a \
               --disable-gui \
               --disable-mencoder \
+              --disable-x11 \
               --enable-runtime-cpudetection
   make
 
@@ -28,8 +29,8 @@ after_build: |-
   cp mplayer package/mplayer.app/Contents/MacOS/
   dylibbundler -od -b -x ./package/mplayer.app/Contents/MacOS/mplayer -d ./package/mplayer.app/Contents/MacOS/lib -p @executable_path/lib
   cd package
-  tar -cvjf ../mplayer-macos.tar.bz2 mplayer.app/
+  tar -cjf ../mplayer-macos-10.14-av.tar.bz2 mplayer.app/
 
 artifacts:
-- path: mplayer-mod/mplayer-macos.tar.bz2
-  name: mplayer-macos.tar.bz2
+- path: mplayer-macos-10.14-av.tar.bz2
+  name: mplayer-macos-10.14-av.tar.bz2
