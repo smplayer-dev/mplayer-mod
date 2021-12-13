@@ -1,0 +1,35 @@
+version: '{build}'
+image: macos-mojave
+#image: macos
+
+environment:
+  global:
+    HOMEBREW_NO_INSTALL_CLEANUP: 1
+    CURL_SSL_BACKEND: 'secure-transport'
+    HOMEBREW_FORCE_BREWED_CURL: 1
+    HOMEBREW_NO_AUTO_UPDATE: 1
+
+install: |-
+  git config --global http.sslVerify false
+  export PATH="/usr/local/Cellar/pkg-config/0.29.2_3/bin:${PATH}"
+  brew install dylibbundler
+  brew install yasm nasm libass ffmpeg
+  
+build_script: |-
+  ./configure --disable-libmpeg2-internal \
+              --disable-ffmpeg_a \
+              --disable-gui \
+              --disable-mencoder \
+              --enable-runtime-cpudetection
+  make
+
+after_build: |-
+  mkdir -p package/mplayer.app/Contents/MacOS/
+  cp mplayer package/mplayer.app/Contents/MacOS/
+  dylibbundler -od -b -x ./package/mplayer.app/Contents/MacOS/mplayer -d ./package/mplayer.app/Contents/MacOS/lib -p @executable_path/lib
+  cd package
+  tar -cvjf ../mplayer-macos.tar.bz2 mplayer.app/
+
+artifacts:
+- path: mplayer-mod/mplayer-macos.tar.bz2
+  name: mplayer-macos.tar.bz2
