@@ -1,5 +1,5 @@
 version: 1.4.b{build}-{branch}
-image: macos-mojave
+image: macos-catalina
 #image: macos
 
 environment:
@@ -29,8 +29,8 @@ after_build: |-
   cp mplayer package/mplayer.app/Contents/MacOS/
   dylibbundler -od -b -x ./package/mplayer.app/Contents/MacOS/mplayer -d ./package/mplayer.app/Contents/MacOS/lib -p @executable_path/lib
   cd package
-  tar -cjf ../mplayer-macos-10.14-av.tar.bz2 mplayer.app/
+  tar -cjf ../mplayer-macos-10.15-av.tar.bz2 mplayer.app/
 
 artifacts:
-- path: mplayer-macos-10.14-av.tar.bz2
-  name: mplayer-macos-10.14-av.tar.bz2
+- path: mplayer-macos-10.15-av.tar.bz2
+  name: mplayer-macos-10.15-av.tar.bz2
