@@ -1,4 +1,4 @@
-version: 1.4.b{build}-{branch}
+version: 1.5.b{build}-{branch}
 image: macos-catalina
 #image: macos
 
