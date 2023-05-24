@@ -49,6 +49,7 @@ CONFIGURE_FLAGS = \
 	--disable-esd \
 	--disable-libmpeg2-internal \
 	--disable-ffmpeg_a \
+	--extra-libs-mplayer=-lrt \
 	$(archconf)
 
 ifeq ($(DEB_HOST_ARCH),i386)
