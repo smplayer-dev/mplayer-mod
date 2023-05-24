@@ -1,6 +1,6 @@
 name: Build on MacOS
 env:
-  version: '1.4'
+  version: '1.5'
 
 on: 
   workflow_dispatch:
@@ -9,7 +9,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-latest
+    runs-on: macos-11
 
     steps:
       - name: Checkout
