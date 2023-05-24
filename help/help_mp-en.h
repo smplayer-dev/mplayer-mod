@@ -1,4 +1,4 @@
-// $Revision: 38113 $
+// $Revision: 38333 $
 // MASTER FILE. Use this file as base for translations.
 // Translated files should be sent to the mplayer-DOCS mailing list or
 // to the help messages maintainer, see DOCS/tech/MAINTAINERS.
@@ -542,6 +542,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "Cache"
 #define MSGTR_GUI_CacheSize "Cache size"
 #define MSGTR_GUI_Cancel "Cancel"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_CD "CD"
 #define MSGTR_GUI_Center "Center"
 #define MSGTR_GUI_Channel1 "Channel 1"
@@ -560,6 +562,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Codecs "Codecs"
 #define MSGTR_GUI_CodecsAndLibraries "Codecs and third party libraries"
 #define MSGTR_GUI_Coefficient "Coefficient"
+#define MSGTR_GUI_ConfigFileError "Config file error\n"
 #define MSGTR_GUI_Configure "Configure"
 #define MSGTR_GUI_ConfigureDriver "Configure driver"
 #define MSGTR_GUI_Contrast "Contrast"
@@ -615,6 +618,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_DirectoryTree "Directory tree"
 #define MSGTR_GUI_DropSubtitle "Drop subtitle"
 #define MSGTR_GUI_DVD "DVD"
+#define MSGTR_GUI_Ellipsis "…"
 #define MSGTR_GUI_EnableAssSubtitle "Enable ssa/ass subtitle rendering"
 #define MSGTR_GUI_EnableAutomaticAVSync "Enable automatic A/V sync"
 #define MSGTR_GUI_EnableCache "Enable Cache"
@@ -691,6 +695,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Information "Information"
 #define MSGTR_GUI_Lavc "lavc (realtime mpeg1 encoding)"
 #define MSGTR_GUI_MaximumUsageSpareCPU "Maximum usage of spare CPU time"
+#define MSGTR_GUI_MemAllocFailed MSGTR_MemAllocFailed
 #define MSGTR_GUI_Minimize "Minimize"
 #define MSGTR_GUI_Miscellaneous "Misc"
 #define MSGTR_GUI_Mixer "Mixer"
@@ -707,6 +712,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_MSG_MemoryErrorWindow "Not enough memory for window rendering.\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "No file loaded."
 #define MSGTR_GUI_MSG_NoMediaOpened "No media opened."
+#define MSGTR_GUI_MSG_NoSkinInstalled "There is no 'default'-skin installed. Skins allow comfortable control and display information during playback. Without a skin, only simple control is available from a menu accessible with a right mouse button click on the video window.\n\nInstall a skin, select one from the skin browser or put 'gui_skin=Noskin' into the configuration file if you want to go without a skin and avoid this message.\n"
 #define MSGTR_GUI_MSG_NotAFile0 "This does not seem to be a file!\n"
 #define MSGTR_GUI_MSG_NotAFile1 "%s does not seem to be a file!\n"
 #define MSGTR_GUI_MSG_PlaybackNeedsRestart "You need to restart playback for some options to take effect."
@@ -840,11 +846,14 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Video "Video"
 #define MSGTR_GUI_VideoEncoder "Video encoder"
 #define MSGTR_GUI_VideoTracks "Video tracks"
+#define MSGTR_GUI_Volume MSGTR_Volume
 #define MSGTR_GUI_Warning "Warning"
 
 #define MSGTR_GUI_WIN32_AddFile "Add file"
 #define MSGTR_GUI_WIN32_AddURL "Add URL"
+#define MSGTR_GUI_WIN32_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_WIN32_Close "Close"
+#define MSGTR_GUI_WIN32_ConfigFileError MSGTR_GUI_ConfigFileError
 #define MSGTR_GUI_WIN32_DebugConsole "Debug Console"
 #define MSGTR_GUI_WIN32_Defaults "Defaults"
 #define MSGTR_GUI_WIN32_DirectoryList "Directory list"

@@ -31,6 +31,7 @@
 #include "gui/app/app.h"
 #include "gui/app/gui.h"
 #include "gui/dialog/dialog.h"
+#include "gui/util/bitmap.h"
 #include "gui/util/misc.h"
 #include "gui/util/string.h"
 
@@ -73,16 +74,16 @@ static void skin_legacy(const char *old, const char *data)
         p = strchr(data, ',');
 
         if (p)
-            mp_msg(MSGT_GPLAYER, MSGL_INFO, MSGTR_GUI_MSG_SkinLegacy, linenumber, p, "font = fontfile");
+            mp_msg(MSGT_GPLAYER, MSGL_INFO, _(MSGTR_GUI_MSG_SkinLegacy), linenumber, p, "font = fontfile");
     } else if (strcmp(old, "$l") == 0) {
         p = strstr(old, data);
 
         if (p && (p == data || p[-1] != '$'))
-            mp_msg(MSGT_GPLAYER, MSGL_INFO, MSGTR_GUI_MSG_SkinLegacy, linenumber, old, "$p");
+            mp_msg(MSGT_GPLAYER, MSGL_INFO, _(MSGTR_GUI_MSG_SkinLegacy), linenumber, old, "$p");
     } else if (strcmp(old, "evSetURL") == 0 && strcmp(data, old) == 0)
-        mp_msg(MSGT_GPLAYER, MSGL_INFO, MSGTR_GUI_MSG_SkinLegacy, linenumber, old, "evLoadURL");
+        mp_msg(MSGT_GPLAYER, MSGL_INFO, _(MSGTR_GUI_MSG_SkinLegacy), linenumber, old, "evLoadURL");
     else if (strcmp(old, "sub") == 0 || strcmp(old, "potmeter") == 0)
-        mp_msg(MSGT_GPLAYER, MSGL_INFO, MSGTR_GUI_MSG_SkinLegacy, linenumber, old, data);
+        mp_msg(MSGT_GPLAYER, MSGL_INFO, _(MSGTR_GUI_MSG_SkinLegacy), linenumber, old, data);
 }
 
 /**
@@ -100,7 +101,7 @@ static void skin_error(const char *format, ...)
     vsnprintf(p, sizeof(p), format, ap);
     va_end(ap);
 
-    gmp_msg(MSGT_GPLAYER, MSGL_ERR, MSGTR_GUI_MSG_SkinErrorMessage, linenumber, p);
+    gmp_msg(MSGT_GPLAYER, MSGL_ERR, _(MSGTR_GUI_MSG_SkinErrorMessage), linenumber, p);
 }
 
 /**
@@ -113,7 +114,7 @@ static void skin_error(const char *format, ...)
 static int section_item(char *item)
 {
     if (!skin) {
-        skin_error(MSGTR_GUI_MSG_SkinErrorSection, item);
+        skin_error(_(MSGTR_GUI_MSG_SkinErrorSection), item);
         return False;
     }
 
@@ -130,7 +131,7 @@ static int section_item(char *item)
 static int window_item(char *item)
 {
     if (!currWinName[0]) {
-        skin_error(MSGTR_GUI_MSG_SkinErrorWindow, item);
+        skin_error(_(MSGTR_GUI_MSG_SkinErrorWindow), item);
         return False;
     }
 
@@ -147,7 +148,7 @@ static int window_item(char *item)
 static int in_window(char *name)
 {
     if (strcmp(currWinName, name) == 0) {
-        skin_error(MSGTR_GUI_MSG_SkinErrorItem, name);
+        skin_error(_(MSGTR_GUI_MSG_SkinErrorItem), name);
         return 1;
     }
 
@@ -167,7 +168,7 @@ static guiItem *next_item(void)
         (*currWinItemIdx)++;
         item = &currWinItems[*currWinItemIdx];
     } else
-        skin_error(MSGTR_GUI_MSG_SkinTooManyItems);
+        skin_error(_(MSGTR_GUI_MSG_SkinTooManyItems));
 
     return item;
 }
@@ -184,14 +185,14 @@ static guiItem *next_item(void)
 static int item_section(char *in)
 {
     if (skin) {
-        skin_error(MSGTR_GUI_MSG_SkinErrorItem, currItem);
+        skin_error(_(MSGTR_GUI_MSG_SkinErrorItem), currItem);
         return 1;
     }
 
     if (strcmp(strlower(in), "movieplayer") == 0)
         skin = &guiApp;
     else {
-        skin_error(MSGTR_GUI_MSG_SkinUnknownName, in);
+        skin_error(_(MSGTR_GUI_MSG_SkinUnknownName), in);
         return 1;
     }
 
@@ -254,7 +255,7 @@ static int item_window(char *in)
         return 1;
 
     if (currWinName[0]) {
-        skin_error(MSGTR_GUI_MSG_SkinErrorItem, currItem);
+        skin_error(_(MSGTR_GUI_MSG_SkinErrorItem), currItem);
         return 1;
     }
 
@@ -283,7 +284,7 @@ static int item_window(char *in)
         currWinItemIdx = &skin->IndexOfMenuItems;
         currWinItems   = skin->menuItems;
     } else {
-        skin_error(MSGTR_GUI_MSG_SkinUnknownName, in);
+        skin_error(_(MSGTR_GUI_MSG_SkinUnknownName), in);
         return 1;
     }
 
@@ -364,7 +365,7 @@ static int item_base(char *in)
 
     if (!is_video) {
         if (!bpRenderMask(&currWin->Bitmap, &currWin->Mask)) {
-            skin_error(MSGTR_GUI_MSG_SkinMemoryError);
+            skin_error(_(MSGTR_GUI_MSG_SkinMemoryError));
             return 1;
         }
         mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[skin]     mask: %ux%u\n", currWin->Mask.Width, currWin->Mask.Height);
@@ -443,7 +444,7 @@ static int item_button(char *in)
     message = appFindMessage(msg);
 
     if (message == -1) {
-        skin_error(MSGTR_GUI_MSG_SkinUnknownMessage, msg);
+        skin_error(_(MSGTR_GUI_MSG_SkinUnknownMessage), msg);
         return 1;
     }
     // legacy
@@ -562,7 +563,7 @@ static int item_menu(char *in)
     message = appFindMessage(msg);
 
     if (message == -1) {
-        skin_error(MSGTR_GUI_MSG_SkinUnknownMessage, msg);
+        skin_error(_(MSGTR_GUI_MSG_SkinUnknownMessage), msg);
         return 1;
     }
     // legacy
@@ -641,7 +642,7 @@ static int parse_potmeter(guiItem *item, char *in)
     message = appFindMessage(buf);
 
     if (message == -1) {
-        skin_error(MSGTR_GUI_MSG_SkinUnknownMessage, buf);
+        skin_error(_(MSGTR_GUI_MSG_SkinUnknownMessage), buf);
         return 1;
     }
     // legacy
@@ -649,7 +650,7 @@ static int parse_potmeter(guiItem *item, char *in)
         skin_legacy("evSetURL", buf);
 
     if (d < 0 || d > 100) {
-        skin_error(MSGTR_GUI_MSG_SkinErrorDefault, d);
+        skin_error(_(MSGTR_GUI_MSG_SkinErrorDefault), d);
         return 1;
     }
 
@@ -692,7 +693,7 @@ static int parse_potmeter(guiItem *item, char *in)
 
     if (strcmp(phfname, "NULL") != 0) {
         if (num == 0) {
-            skin_error(MSGTR_GUI_MSG_SkinErrorNumphases);
+            skin_error(_(MSGTR_GUI_MSG_SkinErrorNumphases));
             return 1;
         }
 
@@ -848,7 +849,7 @@ static int item_pimage(char *in)
     message = appFindMessage(buf);
 
     if (message == -1) {
-        skin_error(MSGTR_GUI_MSG_SkinUnknownMessage, buf);
+        skin_error(_(MSGTR_GUI_MSG_SkinUnknownMessage), buf);
         return 1;
     }
     // legacy
@@ -856,7 +857,7 @@ static int item_pimage(char *in)
         skin_legacy("evSetURL", buf);
 
     if (d < 0 || d > 100) {
-        skin_error(MSGTR_GUI_MSG_SkinErrorDefault, d);
+        skin_error(_(MSGTR_GUI_MSG_SkinErrorDefault), d);
         return 1;
     }
 
@@ -882,7 +883,7 @@ static int item_pimage(char *in)
 
     if (strcmp(phfname, "NULL") != 0) {
         if (num == 0) {
-            skin_error(MSGTR_GUI_MSG_SkinErrorNumphases);
+            skin_error(_(MSGTR_GUI_MSG_SkinErrorNumphases));
             return 1;
         }
 
@@ -926,19 +927,19 @@ static int item_font(char *in)
 
     switch (fntRead(path, fnt)) {
     case -1:
-        skin_error(MSGTR_GUI_MSG_SkinMemoryError);
+        skin_error(_(MSGTR_GUI_MSG_SkinMemoryError));
         return 1;
 
     case -2:
-        skin_error(MSGTR_GUI_MSG_SkinTooManyFonts);
+        skin_error(_(MSGTR_GUI_MSG_SkinTooManyFonts));
         return 1;
 
     case -3:
-        skin_error(MSGTR_GUI_MSG_SkinFontFileNotFound);
+        skin_error(_(MSGTR_GUI_MSG_SkinFontFileNotFound));
         return 1;
 
     case -4:
-        skin_error(MSGTR_GUI_MSG_SkinFontImageNotFound);
+        skin_error(_(MSGTR_GUI_MSG_SkinFontImageNotFound));
         return 1;
     }
 
@@ -983,7 +984,7 @@ static int item_slabel(char *in)
     id = fntFindID(fnt);
 
     if (id < 0) {
-        skin_error(MSGTR_GUI_MSG_SkinFontNotFound, fnt);
+        skin_error(_(MSGTR_GUI_MSG_SkinFontNotFound), fnt);
         return 1;
     }
 
@@ -1003,7 +1004,7 @@ static int item_slabel(char *in)
     item->label  = strdup(txt);
 
     if (!item->label) {
-        skin_error(MSGTR_GUI_MSG_SkinMemoryError);
+        skin_error(_(MSGTR_GUI_MSG_SkinMemoryError));
         return 1;
     }
 
@@ -1052,7 +1053,7 @@ static int item_dlabel(char *in)
     id = fntFindID(fnt);
 
     if (id < 0) {
-        skin_error(MSGTR_GUI_MSG_SkinFontNotFound, fnt);
+        skin_error(_(MSGTR_GUI_MSG_SkinFontNotFound), fnt);
         return 1;
     }
 
@@ -1073,7 +1074,7 @@ static int item_dlabel(char *in)
     item->label  = strdup(txt);
 
     if (!item->label) {
-        skin_error(MSGTR_GUI_MSG_SkinMemoryError);
+        skin_error(_(MSGTR_GUI_MSG_SkinMemoryError));
         return 1;
     }
 
@@ -1104,7 +1105,7 @@ static int item_decoration(char *in)
     strlower(in);
 
     if (strcmp(in, "enable") != 0 && strcmp(in, "disable") != 0) {
-        skin_error(MSGTR_GUI_MSG_SkinUnknownParameter, in);
+        skin_error(_(MSGTR_GUI_MSG_SkinUnknownParameter), in);
         return 1;
     }
 
@@ -1152,19 +1153,19 @@ int skinImageRead(char *fname, guiImage *img)
 
     switch (i) {
     case -1:
-        skin_error(MSGTR_GUI_MSG_SkinErrorBitmap16Bit, fname);
+        skin_error(_(MSGTR_GUI_MSG_SkinErrorBitmap16Bit), fname);
         break;
 
     case -2:
-        skin_error(MSGTR_GUI_MSG_SkinBitmapNotFound, fname);
+        skin_error(_(MSGTR_GUI_MSG_SkinBitmapNotFound), fname);
         break;
 
     case -5:
-        skin_error(MSGTR_GUI_MSG_SkinBitmapPngReadError, fname);
+        skin_error(_(MSGTR_GUI_MSG_SkinBitmapPngReadError), fname);
         break;
 
     case -8:
-        skin_error(MSGTR_GUI_MSG_SkinBitmapConversionError, fname);
+        skin_error(_(MSGTR_GUI_MSG_SkinBitmapConversionError), fname);
         break;
     }
 
@@ -1196,6 +1197,80 @@ static char *setname(char *dir, char *sname)
 }
 
 /**
+ * @brief Create the most minimal skin possible.
+ *
+ * @return 0 (ok) or -1 (error)
+ */
+static int skinNoskin(void)
+{
+    mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[skin] using built-in skin\n");
+
+    appFreeStruct();
+
+    /* section = movieplayer */
+
+    skin = &guiApp;
+
+    /* window = main */
+
+    currWin = &skin->main;
+    currWinItemIdx = &skin->IndexOfMainItems;
+    currWinItems   = skin->mainItems;
+
+    /* decoration = disable */
+
+    skin->mainDecoration = 0;
+
+    /* base = <img>, 0, 0 (where <img> is a 1x1 transparent pixel image) */
+
+    currWin->Bitmap.Width     = 1;
+    currWin->Bitmap.Height    = 1;
+    currWin->Bitmap.Bpp       = 32;
+    currWin->Bitmap.ImageSize = 4;
+    currWin->Bitmap.Image     = calloc(1, 4);
+
+    if (!currWin->Bitmap.Image) {
+        skin_error(_(MSGTR_GUI_MSG_SkinMemoryError));
+        return -1;
+    }
+
+    *(uint32_t *)currWin->Bitmap.Image = GUI_TRANSPARENT;
+
+    if (!bpRenderMask(&currWin->Bitmap, &currWin->Mask)) {
+        skin_error(_(MSGTR_GUI_MSG_SkinMemoryError));
+        return -1;
+    }
+
+    currWin->x      = 0;
+    currWin->y      = 0;
+    currWin->width  = currWin->Bitmap.Width;
+    currWin->height = currWin->Bitmap.Height;
+
+    /* window = video */
+
+    currWin = &skin->video;
+    currWinItemIdx = NULL;
+    currWinItems   = NULL;
+
+    /* base = NULL, -1, -1, 720, 404 */
+
+    currWin->x      = -1;
+    currWin->y      = -1;
+    currWin->width  = 720;
+    currWin->height = 404;
+
+    /* background = 0, 0, 0 */
+
+    currWin->R = 0;
+    currWin->G = 0;
+    currWin->B = 0;
+
+    /* end */
+
+    return 0;
+}
+
+/**
  * @brief Read and parse a skin.
  *
  * @param sname name of the skin
@@ -1210,13 +1285,16 @@ int skinRead(char *sname)
     unsigned char param[256];
     unsigned int i;
 
+    if (*sname == 0 || strcmp(sname, "Noskin") == 0)
+        return skinNoskin();
+
     skinfname = setname(skinDirInHome, sname);
 
     if ((skinfile = fopen(skinfname, "rt")) == NULL) {
         skinfname = setname(skinDirInData, sname);
 
         if ((skinfile = fopen(skinfname, "rt")) == NULL) {
-            mp_msg(MSGT_GPLAYER, MSGL_ERR, MSGTR_GUI_MSG_SkinFileNotFound, skinfname);
+            mp_msg(MSGT_GPLAYER, MSGL_ERR, _(MSGTR_GUI_MSG_SkinFileNotFound), skinfname);
             return -1;
         }
     }
@@ -1254,7 +1332,7 @@ int skinRead(char *sname)
         }
 
         if (i == FF_ARRAY_ELEMS(skinItem)) {
-            skin_error(MSGTR_GUI_MSG_SkinUnknownItem, currItem);
+            skin_error(_(MSGTR_GUI_MSG_SkinUnknownItem), currItem);
             fclose(skinfile);
             return -2;
         }
@@ -1263,7 +1341,7 @@ int skinRead(char *sname)
     fclose(skinfile);
 
     if (linenumber == 0) {
-        mp_msg(MSGT_GPLAYER, MSGL_ERR, MSGTR_GUI_MSG_SkinFileNotReadable, skinfname);
+        mp_msg(MSGT_GPLAYER, MSGL_ERR, _(MSGTR_GUI_MSG_SkinFileNotReadable), skinfname);
         return -1;
     }
 

@@ -45,6 +45,9 @@
 #include "osdep/timer.h"
 #if defined(__MINGW32__)
 #include <windows.h>
+#ifdef _MSC_VER
+#include <process.h>
+#endif
 static void ThreadProc( void *s );
 #elif defined(__OS2__)
 #define INCL_DOS
@@ -578,7 +581,7 @@ int cache_stream_fill_buffer(stream_t *s){
   s->buf_len=len;
   s->pos+=len;
 //  printf("[%d]",len);fflush(stdout);
-  if (s->capture_file)
+  if (s->capture_stream)
     stream_capture_do(s);
   return len;
 

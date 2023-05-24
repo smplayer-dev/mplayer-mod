@@ -63,6 +63,10 @@ static av_cold int decode_init(AVCodecContext *avctx)
             av_log(avctx, AV_LOG_ERROR, "not enough extradata\n");
             return AVERROR_INVALIDDATA;
         }
+        if (!s->font_height) {
+            av_log(avctx, AV_LOG_ERROR, "invalid font height\n");
+            return AVERROR_INVALIDDATA;
+        }
     } else {
         s->font_height = 8;
         s->flags = 0;
@@ -93,8 +97,10 @@ static av_cold int decode_init(AVCodecContext *avctx)
             break;
         }
     }
-    if (avctx->width < FONT_WIDTH || avctx->height < s->font_height)
+    if (avctx->width < FONT_WIDTH || avctx->height < s->font_height) {
+        av_log(avctx, AV_LOG_ERROR, "Resolution too small for font.\n");
         return AVERROR_INVALIDDATA;
+    }
 
     return 0;
 }
@@ -209,7 +215,7 @@ static int decode_frame(AVCodecContext *avctx,
 }
 
 #if CONFIG_BINTEXT_DECODER
-AVCodec ff_bintext_decoder = {
+const AVCodec ff_bintext_decoder = {
     .name           = "bintext",
     .long_name      = NULL_IF_CONFIG_SMALL("Binary text"),
     .type           = AVMEDIA_TYPE_VIDEO,
@@ -218,10 +224,11 @@ AVCodec ff_bintext_decoder = {
     .init           = decode_init,
     .decode         = decode_frame,
     .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };
 #endif
 #if CONFIG_XBIN_DECODER
-AVCodec ff_xbin_decoder = {
+const AVCodec ff_xbin_decoder = {
     .name           = "xbin",
     .long_name      = NULL_IF_CONFIG_SMALL("eXtended BINary text"),
     .type           = AVMEDIA_TYPE_VIDEO,
@@ -230,10 +237,11 @@ AVCodec ff_xbin_decoder = {
     .init           = decode_init,
     .decode         = decode_frame,
     .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };
 #endif
 #if CONFIG_IDF_DECODER
-AVCodec ff_idf_decoder = {
+const AVCodec ff_idf_decoder = {
     .name           = "idf",
     .long_name      = NULL_IF_CONFIG_SMALL("iCEDraw text"),
     .type           = AVMEDIA_TYPE_VIDEO,
@@ -242,5 +250,6 @@ AVCodec ff_idf_decoder = {
     .init           = decode_init,
     .decode         = decode_frame,
     .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };
 #endif

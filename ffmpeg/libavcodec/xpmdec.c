@@ -311,6 +311,7 @@ static int xpm_decode_frame(AVCodecContext *avctx, void *data,
     int ncolors, cpp, ret, i, j;
     int64_t size;
     uint32_t *dst;
+    int width, height;
 
     avctx->pix_fmt = AV_PIX_FMT_BGRA;
 
@@ -332,15 +333,12 @@ static int xpm_decode_frame(AVCodecContext *avctx, void *data,
 
     ptr += mod_strcspn(ptr, "\"");
     if (sscanf(ptr, "\"%u %u %u %u\",",
-               &avctx->width, &avctx->height, &ncolors, &cpp) != 4) {
+               &width, &height, &ncolors, &cpp) != 4) {
         av_log(avctx, AV_LOG_ERROR, "missing image parameters\n");
         return AVERROR_INVALIDDATA;
     }
 
-    if ((ret = ff_set_dimensions(avctx, avctx->width, avctx->height)) < 0)
-        return ret;
-
-    if ((ret = ff_get_buffer(avctx, p, 0)) < 0)
+    if ((ret = ff_set_dimensions(avctx, width, height)) < 0)
         return ret;
 
     if (cpp <= 0 || cpp >= 5) {
@@ -359,13 +357,16 @@ static int xpm_decode_frame(AVCodecContext *avctx, void *data,
 
     size *= 4;
 
-    av_fast_padded_malloc(&x->pixels, &x->pixels_size, size);
-    if (!x->pixels)
-        return AVERROR(ENOMEM);
-
     ptr += mod_strcspn(ptr, ",") + 1;
     if (end - ptr < 1)
         return AVERROR_INVALIDDATA;
+
+    if ((ret = ff_get_buffer(avctx, p, 0)) < 0)
+        return ret;
+
+    av_fast_padded_malloc(&x->pixels, &x->pixels_size, size);
+    if (!x->pixels)
+        return AVERROR(ENOMEM);
 
     for (i = 0; i < ncolors; i++) {
         const uint8_t *index;
@@ -435,7 +436,7 @@ static av_cold int xpm_decode_close(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec ff_xpm_decoder = {
+const AVCodec ff_xpm_decoder = {
     .name           = "xpm",
     .type           = AVMEDIA_TYPE_VIDEO,
     .id             = AV_CODEC_ID_XPM,

@@ -54,13 +54,13 @@ static int acm_read_header(AVFormatContext *s)
         return AVERROR_INVALIDDATA;
     st->start_time         = 0;
     st->duration           = AV_RL32(st->codecpar->extradata +  4) / st->codecpar->channels;
-    st->need_parsing       = AVSTREAM_PARSE_FULL_RAW;
+    ffstream(st)->need_parsing = AVSTREAM_PARSE_FULL_RAW;
     avpriv_set_pts_info(st, 64, 1, st->codecpar->sample_rate);
 
     return 0;
 }
 
-AVInputFormat ff_acm_demuxer = {
+const AVInputFormat ff_acm_demuxer = {
     .name           = "acm",
     .long_name      = NULL_IF_CONFIG_SMALL("Interplay ACM"),
     .read_probe     = acm_probe,
@@ -69,4 +69,6 @@ AVInputFormat ff_acm_demuxer = {
     .flags          = AVFMT_NOBINSEARCH | AVFMT_NOGENSEARCH | AVFMT_NO_BYTE_SEEK | AVFMT_NOTIMESTAMPS,
     .extensions     = "acm",
     .raw_codec_id   = AV_CODEC_ID_INTERPLAY_ACM,
+    .priv_data_size = sizeof(FFRawDemuxerContext),
+    .priv_class     = &ff_raw_demuxer_class,
 };

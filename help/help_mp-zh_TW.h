@@ -649,6 +649,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "緩存"
 #define MSGTR_GUI_CacheSize "緩存大小"
 #define MSGTR_GUI_Cancel "取消"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_Center "中間"
 #define MSGTR_GUI_Channel1 "聲道 1"
 #define MSGTR_GUI_Channel2 "聲道 2"
@@ -665,6 +667,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_CodecFamilyVideo "視頻解碼器族"
 #define MSGTR_GUI_CodecsAndLibraries "編解碼器和第三方庫"
 #define MSGTR_GUI_Coefficient "參數"
+#define MSGTR_GUI_ConfigFileError "配置文件錯誤\n"
 #define MSGTR_GUI_Configure "配置"
 #define MSGTR_GUI_ConfigureDriver "配置驅動"
 #define MSGTR_GUI_Contrast "對比度"
@@ -729,16 +732,17 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Hue "色調"
 #define MSGTR_GUI_Lavc "使用 LAVC (FFmpeg)"
 #define MSGTR_GUI_MaximumUsageSpareCPU "自動品質控製"
+#define MSGTR_GUI_MemAllocFailed MSGTR_MemAllocFailed
 #define MSGTR_GUI_Miscellaneous "其他"
 #define MSGTR_GUI_Mixer "混音器"
 #define MSGTR_GUI_MixerChannel "混音通道"
 #define MSGTR_GUI_MSG_AddingVideoFilter "[GUI] 添加視頻過濾器: %s\n"
 #define MSGTR_GUI_MSG_ColorDepthTooLow "抱歉, 色彩深度太低。\n"
 #define MSGTR_GUI_MSG_DragAndDropNothing "D&D: 没有任何東西返回!\n"
-#define MSGTR_GUI_MSG_DXR3NeedsLavc "抱歉, 不能用没有重編碼的 DXR3/H+ 設備播放 non-MPEG 文件\n請啟用 DXR3/H+ 配置盒中的 lavc。"
+#define MSGTR_GUI_MSG_DXR3NeedsLavc "抱歉, 不能用没有重編碼的 DXR3/H+ 設備播放 non-MPEG 文件\n請啟用 DXR3/H+ 配置盒中的 lavc。\n"
 #define MSGTR_GUI_MSG_LoadingSubtitle "[GUI] 導入字幕: %s\n"
 #define MSGTR_GUI_MSG_MemoryErrorImage "抱歉, 内存不够繪製緩衝。\n"
-#define MSGTR_GUI_MSG_MemoryErrorWindow "抱歉, 没有足够的内存用于繪製緩衝。"
+#define MSGTR_GUI_MSG_MemoryErrorWindow "抱歉, 没有足够的内存用于繪製緩衝。\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "没有載入文件"
 #define MSGTR_GUI_MSG_NoMediaOpened "没有打開媒體"
 #define MSGTR_GUI_MSG_NotAFile0 "這好像不是一個文件...\n"
@@ -764,7 +768,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_MSG_SkinUnknownParameter "未知參數 (%s)\n"
 #define MSGTR_GUI_MSG_TooManyWindows "打開窗口太多。\n"
 #define MSGTR_GUI_MSG_UnableToSaveOption "[cfg] 無法保存 '%s' 選項。\n"
-#define MSGTR_GUI_MSG_VideoOutError "抱歉, 未找到 GUI-兼容的視頻輸出驅動。"
+#define MSGTR_GUI_MSG_VideoOutError "抱歉, 未找到 GUI-兼容的視頻輸出驅動。\n"
 #define MSGTR_GUI_MSG_XShapeError "抱歉, 你的係統不支持 XShape 擴展。\n"
 #define MSGTR_GUI_MSG_XSharedMemoryError "共享内存擴展錯誤\n"
 #define MSGTR_GUI_MSG_XSharedMemoryUnavailable "抱歉, 你的係統不支持 X 共享内存擴展。\n"
@@ -836,6 +840,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Video "視頻"
 #define MSGTR_GUI_VideoEncoder "視頻編碼器"
 #define MSGTR_GUI_VideoTracks "視頻軌迹"
+#define MSGTR_GUI_Volume MSGTR_Volume
 #define MSGTR_GUI_Warning "警告!"
 
 // ======================= VO Video Output drivers ========================

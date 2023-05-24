@@ -616,6 +616,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "Vyrovnávacia pamäť"
 #define MSGTR_GUI_CacheSize "Veľkosť vyr. pamäte"
 #define MSGTR_GUI_Cancel "Zrušiť"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_Center "Stredný"
 #define MSGTR_GUI_Channel1 "Kanál 1"
 #define MSGTR_GUI_Channel2 "Kanál 2"
@@ -632,6 +634,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_CodecFamilyVideo "Rodina video kodekov"
 #define MSGTR_GUI_CodecsAndLibraries "Kódeky a knižnice tretích strán"
 #define MSGTR_GUI_Coefficient "Koeficient"
+#define MSGTR_GUI_ConfigFileError "chyba konfiguračného súboru\n"
 #define MSGTR_GUI_Configure "Konfigurácia"
 #define MSGTR_GUI_ConfigureDriver "Konfigurovať ovládač"
 #define MSGTR_GUI_Contrast "Kontrast"
@@ -695,11 +698,12 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Hue "Odtieň"
 #define MSGTR_GUI_Lavc "Použiť LAVC (FFmpeg)"
 #define MSGTR_GUI_MaximumUsageSpareCPU "Automatická qualita"
+#define MSGTR_GUI_MemAllocFailed MSGTR_MemAllocFailed
 #define MSGTR_GUI_Miscellaneous "Rôzne"
 #define MSGTR_GUI_Mixer "Mixér"
 #define MSGTR_GUI_MixerChannel "Kanál mixéru"
-#define MSGTR_GUI_MSG_DXR3NeedsLavc "Žiaľ, nemôžete prehrávať nie mpeg súbory s DXR3/H+ zariadením bez prekódovania.\nProsím zapnite lavc v DXR3/H+ konfig. okne."
-#define MSGTR_GUI_MSG_MemoryErrorWindow "Žiaľ, nedostatok pamäte pre buffer na kreslenie."
+#define MSGTR_GUI_MSG_DXR3NeedsLavc "Žiaľ, nemôžete prehrávať nie mpeg súbory s DXR3/H+ zariadením bez prekódovania.\nProsím zapnite lavc v DXR3/H+ konfig. okne.\n"
+#define MSGTR_GUI_MSG_MemoryErrorWindow "Žiaľ, nedostatok pamäte pre buffer na kreslenie.\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "Nenahraný žiaden súbor"
 #define MSGTR_GUI_MSG_NoMediaOpened "Nič nie je otvorené"
 #define MSGTR_GUI_MSG_PlaybackNeedsRestart "Prosím pamätajte, nietoré voľby potrebujú reštart prehrávania!"
@@ -719,7 +723,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_MSG_SkinTooManyFonts "príliš mnoho fontov deklarovaných\n"
 #define MSGTR_GUI_MSG_SkinUnknownMessage "neznáma správa: %s\n"
 #define MSGTR_GUI_MSG_SkinUnknownParameter "neznámy parameter (%s)\n"
-#define MSGTR_GUI_MSG_VideoOutError "Žiaľ, nemôžem nájsť gui kompatibilný ovládač video výstupu."
+#define MSGTR_GUI_MSG_VideoOutError "Žiaľ, nemôžem nájsť gui kompatibilný ovládač video výstupu.\n"
 #define MSGTR_GUI_Mute "Stlmiť zvuk"
 #define MSGTR_GUI_NetworkStreaming "Sieťové prehrávanie (streaming)..."
 #define MSGTR_GUI_Next "Ďalší prúd"
@@ -786,6 +790,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Video "Video"
 #define MSGTR_GUI_VideoEncoder "Video kóder"
 #define MSGTR_GUI_VideoTracks "Video stopa"
+#define MSGTR_GUI_Volume MSGTR_Volume
 #define MSGTR_GUI_Warning "Upozornenie!"
 
 // ========================== LIBMPCODECS ===================================

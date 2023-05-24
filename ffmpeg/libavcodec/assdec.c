@@ -23,6 +23,7 @@
 
 #include "avcodec.h"
 #include "ass.h"
+#include "internal.h"
 #include "libavutil/internal.h"
 #include "libavutil/mem.h"
 
@@ -31,7 +32,8 @@ static av_cold int ass_decode_init(AVCodecContext *avctx)
     avctx->subtitle_header = av_malloc(avctx->extradata_size + 1);
     if (!avctx->subtitle_header)
         return AVERROR(ENOMEM);
-    memcpy(avctx->subtitle_header, avctx->extradata, avctx->extradata_size);
+    if (avctx->extradata_size)
+        memcpy(avctx->subtitle_header, avctx->extradata, avctx->extradata_size);
     avctx->subtitle_header[avctx->extradata_size] = 0;
     avctx->subtitle_header_size = avctx->extradata_size;
     return 0;
@@ -61,23 +63,25 @@ static int ass_decode_frame(AVCodecContext *avctx, void *data, int *got_sub_ptr,
 }
 
 #if CONFIG_SSA_DECODER
-AVCodec ff_ssa_decoder = {
+const AVCodec ff_ssa_decoder = {
     .name         = "ssa",
     .long_name    = NULL_IF_CONFIG_SMALL("ASS (Advanced SubStation Alpha) subtitle"),
     .type         = AVMEDIA_TYPE_SUBTITLE,
     .id           = AV_CODEC_ID_ASS,
     .init         = ass_decode_init,
     .decode       = ass_decode_frame,
+    .caps_internal = FF_CODEC_CAP_INIT_THREADSAFE,
 };
 #endif
 
 #if CONFIG_ASS_DECODER
-AVCodec ff_ass_decoder = {
+const AVCodec ff_ass_decoder = {
     .name         = "ass",
     .long_name    = NULL_IF_CONFIG_SMALL("ASS (Advanced SubStation Alpha) subtitle"),
     .type         = AVMEDIA_TYPE_SUBTITLE,
     .id           = AV_CODEC_ID_ASS,
     .init         = ass_decode_init,
     .decode       = ass_decode_frame,
+    .caps_internal = FF_CODEC_CAP_INIT_THREADSAFE,
 };
 #endif

@@ -84,6 +84,9 @@ static int read_header(AVFormatContext *s)
     avio_skip(pb, 4);
     ico->nb_images = avio_rl16(pb);
 
+    if (!ico->nb_images)
+        return AVERROR_INVALIDDATA;
+
     ico->images = av_malloc_array(ico->nb_images, sizeof(IcoImage));
     if (!ico->images)
         return AVERROR(ENOMEM);
@@ -93,7 +96,7 @@ static int read_header(AVFormatContext *s)
         int tmp;
 
         if (avio_seek(pb, 6 + i * 16, SEEK_SET) < 0)
-            break;
+            return AVERROR_INVALIDDATA;
 
         st = avformat_new_stream(s, NULL);
         if (!st)
@@ -116,7 +119,7 @@ static int read_header(AVFormatContext *s)
         ico->images[i].offset = avio_rl32(pb);
 
         if (avio_seek(pb, ico->images[i].offset, SEEK_SET) < 0)
-            break;
+            return AVERROR_INVALIDDATA;
 
         codec = avio_rl32(pb);
         switch (codec) {
@@ -150,11 +153,13 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
     IcoDemuxContext *ico = s->priv_data;
     IcoImage *image;
     AVIOContext *pb = s->pb;
-    AVStream *st = s->streams[0];
+    AVStream *st;
     int ret;
 
     if (ico->current_image >= ico->nb_images)
         return AVERROR_EOF;
+
+    st = s->streams[0];
 
     image = &ico->images[ico->current_image];
 
@@ -179,7 +184,6 @@ static int read_packet(AVFormatContext *s, AVPacket *pkt)
         bytestream_put_le32(&buf, 0);
 
         if ((ret = avio_read(pb, buf, image->size)) != image->size) {
-            av_packet_unref(pkt);
             return ret < 0 ? ret : AVERROR_INVALIDDATA;
         }
 
@@ -210,10 +214,11 @@ static int ico_read_close(AVFormatContext * s)
     return 0;
 }
 
-AVInputFormat ff_ico_demuxer = {
+const AVInputFormat ff_ico_demuxer = {
     .name           = "ico",
     .long_name      = NULL_IF_CONFIG_SMALL("Microsoft Windows ICO"),
     .priv_data_size = sizeof(IcoDemuxContext),
+    .flags_internal = FF_FMT_INIT_CLEANUP,
     .read_probe     = probe,
     .read_header    = read_header,
     .read_packet    = read_packet,

@@ -1,3 +1,4 @@
+
 THREADS = 1
 VREF = tests/vsynth1/00.pgm
 AREF = tests/data/asynth1.sw
@@ -39,7 +40,7 @@ tests/test_copy.ffmeta: tests/data
 	$(M)cp -f $(SRC_PATH)/tests/test.ffmeta tests/test_copy.ffmeta
 
 tests/data/ffprobe-test.nut: ffmpeg$(PROGSSUF)$(EXESUF) tests/test_copy.ffmeta
-	$(M)$(TARGET_EXEC) $(TARGET_PATH)/$< \
+	$(M)$(TARGET_EXEC) $(TARGET_PATH)/$< -nostdin \
         -f lavfi -i "aevalsrc=sin(400*PI*2*t):d=0.125[out0]; testsrc=d=0.125[out1]; testsrc=s=100x100:d=0.125[out2]" \
         -f ffmetadata -i $(TARGET_PATH)/tests/test_copy.ffmeta \
         -flags +bitexact -fflags +bitexact -map 0:0 -map 0:1 -map 0:2 -map_metadata 1 \
@@ -84,6 +85,16 @@ FILTERDEMDECENCMUX = $(call ALLYES, $(1:%=%_FILTER) $(2)_DEMUXER $(3)_DECODER $(
 
 PARSERDEMDEC       = $(call ALLYES, $(1)_PARSER $(2)_DEMUXER $(3)_DECODER)
 
+# Allow overriding CONFIG_LARGE_TESTS via LARGE_TESTS, if set on the
+# make command line.
+ifeq ($(LARGE_TESTS), yes)
+CONFIG_LARGE_TESTS:=yes
+!CONFIG_LARGE_TESTS:=
+else ifeq ($(LARGE_TESTS), no)
+CONFIG_LARGE_TESTS:=
+!CONFIG_LARGE_TESTS:=yes
+endif
+
 include $(SRC_PATH)/$(APITESTSDIR)/Makefile
 
 include $(SRC_PATH)/tests/fate/acodec.mak
@@ -109,6 +120,7 @@ include $(SRC_PATH)/tests/fate/atrac.mak
 include $(SRC_PATH)/tests/fate/audio.mak
 include $(SRC_PATH)/tests/fate/bmp.mak
 include $(SRC_PATH)/tests/fate/build.mak
+include $(SRC_PATH)/tests/fate/caf.mak
 include $(SRC_PATH)/tests/fate/canopus.mak
 include $(SRC_PATH)/tests/fate/cbs.mak
 include $(SRC_PATH)/tests/fate/cdxl.mak
@@ -118,6 +130,7 @@ include $(SRC_PATH)/tests/fate/cover-art.mak
 include $(SRC_PATH)/tests/fate/dca.mak
 include $(SRC_PATH)/tests/fate/demux.mak
 include $(SRC_PATH)/tests/fate/dfa.mak
+include $(SRC_PATH)/tests/fate/dnn.mak
 include $(SRC_PATH)/tests/fate/dnxhd.mak
 include $(SRC_PATH)/tests/fate/dpcm.mak
 include $(SRC_PATH)/tests/fate/ea.mak
@@ -140,11 +153,11 @@ include $(SRC_PATH)/tests/fate/hlsenc.mak
 include $(SRC_PATH)/tests/fate/hw.mak
 include $(SRC_PATH)/tests/fate/id3v2.mak
 include $(SRC_PATH)/tests/fate/image.mak
+include $(SRC_PATH)/tests/fate/imf.mak
 include $(SRC_PATH)/tests/fate/indeo.mak
 include $(SRC_PATH)/tests/fate/libavcodec.mak
 include $(SRC_PATH)/tests/fate/libavdevice.mak
 include $(SRC_PATH)/tests/fate/libavformat.mak
-include $(SRC_PATH)/tests/fate/libavresample.mak
 include $(SRC_PATH)/tests/fate/libavutil.mak
 include $(SRC_PATH)/tests/fate/libswresample.mak
 include $(SRC_PATH)/tests/fate/libswscale.mak
@@ -160,6 +173,7 @@ include $(SRC_PATH)/tests/fate/mpeg4.mak
 include $(SRC_PATH)/tests/fate/mpegps.mak
 include $(SRC_PATH)/tests/fate/mpegts.mak
 include $(SRC_PATH)/tests/fate/mxf.mak
+include $(SRC_PATH)/tests/fate/oma.mak
 include $(SRC_PATH)/tests/fate/opus.mak
 include $(SRC_PATH)/tests/fate/pcm.mak
 include $(SRC_PATH)/tests/fate/pixfmt.mak
@@ -174,6 +188,7 @@ include $(SRC_PATH)/tests/fate/segment.mak
 include $(SRC_PATH)/tests/fate/source.mak
 include $(SRC_PATH)/tests/fate/speedhq.mak
 include $(SRC_PATH)/tests/fate/subtitles.mak
+include $(SRC_PATH)/tests/fate/truehd.mak
 include $(SRC_PATH)/tests/fate/utvideo.mak
 include $(SRC_PATH)/tests/fate/video.mak
 include $(SRC_PATH)/tests/fate/voice.mak
@@ -187,25 +202,30 @@ include $(SRC_PATH)/tests/fate/xvid.mak
 FATE_FFMPEG += $(FATE_FFMPEG-yes) $(FATE_AVCONV) $(FATE_AVCONV-yes)
 FATE-$(CONFIG_FFMPEG) += $(FATE_FFMPEG)
 FATE-$(CONFIG_FFPROBE) += $(FATE_FFPROBE)
+FATE-$(call ALLYES, FFMPEG FFPROBE) += $(FATE_FFMPEG_FFPROBE)
 
 FATE_SAMPLES_AVCONV           += $(FATE_SAMPLES_AVCONV-yes)
 FATE_SAMPLES_FFMPEG           += $(FATE_SAMPLES_FFMPEG-yes)
-FATE_EXTERN-$(CONFIG_FFMPEG)  += $(FATE_SAMPLES_AVCONV) $(FATE_SAMPLES_FFMPEG) $(FATE_SAMPLES_FFPROBE) $(FATE_SAMPLES_FASTSTART)
-FATE_EXTERN += $(FATE_EXTERN-yes)
+FATE_EXTERN-$(CONFIG_FFMPEG)  += $(FATE_SAMPLES_AVCONV) $(FATE_SAMPLES_FFMPEG)
+FATE_EXTERN-$(CONFIG_FFPROBE) += $(FATE_SAMPLES_FFPROBE)
+FATE_SAMPLES_FFMPEG_FFPROBE   += $(FATE_SAMPLES_FFMPEG_FFPROBE-yes)
+FATE_EXTERN-$(call ALLYES, FFMPEG FFPROBE) += $(FATE_SAMPLES_FFMPEG_FFPROBE)
+FATE_EXTERN                   += $(FATE_EXTERN-yes) $(FATE_SAMPLES_FASTSTART)
 
 FATE += $(FATE-yes)
 
 RSYNC_OPTIONS-$(HAVE_RSYNC_CONTIMEOUT) += --contimeout=60
 RSYNC_OPTIONS = -vrltLW --timeout=60 $(RSYNC_OPTIONS-yes)
 
-$(FATE_FFMPEG) $(FATE_SAMPLES_AVCONV) $(FATE_SAMPLES_FFMPEG): ffmpeg$(PROGSSUF)$(EXESUF)
+$(FATE_FFMPEG) $(FATE_FFMPEG_FFPROBE) $(FATE_SAMPLES_AVCONV) $(FATE_SAMPLES_FFMPEG) $(FATE_SAMPLES_FFMPEG_FFPROBE): ffmpeg$(PROGSSUF)$(EXESUF)
 
-$(FATE_FFPROBE) $(FATE_SAMPLES_FFPROBE): ffprobe$(PROGSSUF)$(EXESUF)
+$(FATE_FFPROBE) $(FATE_FFMPEG_FFPROBE) $(FATE_SAMPLES_FFPROBE) $(FATE_SAMPLES_FFMPEG_FFPROBE): ffprobe$(PROGSSUF)$(EXESUF)
 
 $(FATE_SAMPLES_FASTSTART): tools/qt-faststart$(EXESUF)
+$(FATE_SAMPLES_DUMP_DATA): tools/venc_data_dump$(EXESUF)
+$(FATE_SAMPLES_SCALE_SLICE): tools/scale_slice_test$(EXESUF)
 
 ifdef SAMPLES
-FATE += $(FATE_FULL) $(FATE_FULL-yes)
 FATE += $(FATE_EXTERN)
 fate-rsync:
 	rsync $(RSYNC_OPTIONS) rsync://fate-suite.ffmpeg.org/fate-suite/ $(SAMPLES)
@@ -232,6 +252,7 @@ FATE += $(FATE_HW-yes)
 
 $(FATE) $(FATE_TESTS-no): export PROGSUF = $(PROGSSUF)
 $(FATE) $(FATE_TESTS-no): export EXECSUF = $(EXESUF)
+$(FATE) $(FATE_TESTS-no): export HOSTEXECSUF = $(HOSTEXESUF)
 $(FATE) $(FATE_TESTS-no): $(FATE_UTILS:%=tests/%$(HOSTEXESUF)) | $(FATE_OUTDIRS)
 	@echo "TEST    $(@:fate-%=%)"
 	$(Q)$(SRC_PATH)/tests/fate-run.sh $@ "$(TARGET_SAMPLES)" "$(TARGET_EXEC)" "$(TARGET_PATH)" '$(CMD)' '$(CMP)' '$(REF)' '$(FUZZ)' '$(THREADS)' '$(THREAD_TYPE)' '$(CPUFLAGS)' '$(CMP_SHIFT)' '$(CMP_TARGET)' '$(SIZE_TOLERANCE)' '$(CMP_UNIT)' '$(GEN)' '$(HWACCEL)' '$(REPORT)' '$(KEEP)'

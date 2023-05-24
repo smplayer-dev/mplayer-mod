@@ -526,6 +526,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "Gyorsítótár"
 #define MSGTR_GUI_CacheSize "Gyorsítótár merete"
 #define MSGTR_GUI_Cancel "Mégse"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_Center "Középső"
 #define MSGTR_GUI_Channel1 "1. Csatorna"
 #define MSGTR_GUI_Channel2 "2. Csatorna"
@@ -542,6 +544,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_CodecFamilyVideo "Video kodek család"
 #define MSGTR_GUI_CodecsAndLibraries "Codec-ek és third party könyvtárak"
 #define MSGTR_GUI_Coefficient "Együttható"
+#define MSGTR_GUI_ConfigFileError "konfigurációs fájl hibája\n"
 #define MSGTR_GUI_Configure "Beállítás"
 #define MSGTR_GUI_ConfigureDriver "Vezérlő beállítása"
 #define MSGTR_GUI_Contrast "Kontraszt"
@@ -607,16 +610,17 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Hue "Szinárnyalat"
 #define MSGTR_GUI_Lavc "LAVC használata (FFmpeg)"
 #define MSGTR_GUI_MaximumUsageSpareCPU "Autómatikus minőség állítás"
+#define MSGTR_GUI_MemAllocFailed MSGTR_MemAllocFailed
 #define MSGTR_GUI_Miscellaneous "Egyéb"
 #define MSGTR_GUI_Mixer "Mixer"
 #define MSGTR_GUI_MixerChannel "Mixer csatorna"
 #define MSGTR_GUI_MSG_AddingVideoFilter "[GUI] Videó szűrő hozzáadása: %s\n"
 #define MSGTR_GUI_MSG_ColorDepthTooLow "Bocs, a szín mélység túl kicsi.\n"
 #define MSGTR_GUI_MSG_DragAndDropNothing "D&D: Semmi sem jött vissza!\n"
-#define MSGTR_GUI_MSG_DXR3NeedsLavc "Nem MPEG fájl lejátszása nem lehetséges a DXR3/H+ hardverrel újrakódolás nélkül.\nKapcsold be a lavc opciót a DXR3/H+ konfigurációs panelen."
+#define MSGTR_GUI_MSG_DXR3NeedsLavc "Nem MPEG fájl lejátszása nem lehetséges a DXR3/H+ hardverrel újrakódolás nélkül.\nKapcsold be a lavc opciót a DXR3/H+ konfigurációs panelen.\n"
 #define MSGTR_GUI_MSG_LoadingSubtitle "[GUI] Feliratok betöltése: %s\n"
 #define MSGTR_GUI_MSG_MemoryErrorImage "Bocs, nincs elég memória a rajz buffernek.\n"
-#define MSGTR_GUI_MSG_MemoryErrorWindow "Nincs elég memória a rajzoló bufferhez."
+#define MSGTR_GUI_MSG_MemoryErrorWindow "Nincs elég memória a rajzoló bufferhez.\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "nincs fájl betöltve"
 #define MSGTR_GUI_MSG_NoMediaOpened "nincs megnyitva semmi"
 #define MSGTR_GUI_MSG_NotAFile0 "Úgy tűnik, hogy ez nem fájl...\n"
@@ -642,7 +646,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_MSG_SkinUnknownParameter "ismeretlen paraméter (%s)\n"
 #define MSGTR_GUI_MSG_TooManyWindows "Túl sok nyitott ablak van.\n"
 #define MSGTR_GUI_MSG_UnableToSaveOption "[cfg] A(z) '%s' opciót nem sikerült elmenteni.\n"
-#define MSGTR_GUI_MSG_VideoOutError "Nem találtam GUI-kompatibilis videó meghajtót."
+#define MSGTR_GUI_MSG_VideoOutError "Nem találtam GUI-kompatibilis videó meghajtót.\n"
 #define MSGTR_GUI_MSG_XShapeError "Bocs, a rendszered nem támogatja az XShape kiterjesztést.\n"
 #define MSGTR_GUI_MSG_XSharedMemoryError "osztott memória kiterjesztés hibája\n"
 #define MSGTR_GUI_MSG_XSharedMemoryUnavailable "Bocs, a rendszered nem támogatja az X osztott memória kiterjesztést.\n"
@@ -714,6 +718,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Video "Videó"
 #define MSGTR_GUI_VideoEncoder "Video kódoló"
 #define MSGTR_GUI_VideoTracks "Video track"
+#define MSGTR_GUI_Volume MSGTR_Volume
 #define MSGTR_GUI_Warning "Figyelmeztetés!"
 
 // ======================= video output drivers ========================

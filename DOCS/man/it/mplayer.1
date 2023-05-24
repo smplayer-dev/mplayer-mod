@@ -1,5 +1,5 @@
 .\" synced with r30610
-.\" MPlayer (C) 2000-2019 MPlayer Team
+.\" MPlayer (C) 2000-2022 MPlayer Team
 .\" Questa pagina di manuale è stata fatta da Gabucino, Diego Biurrun,
 .\" Jonas Jermann
 .\" Traduzione in italiano di Daniele Forghieri, aggiornamenti PaulTT
@@ -626,7 +626,6 @@ gui_main_pos_y,
 gui_save_pos (sì/no),
 gui_video_out_pos_x,
 gui_video_out_pos_y,
-load_fullscreen  (sì/no),
 playbar (abilita/disabilita),
 show_videowin (sì/no),
 vf_lavc
@@ -671,6 +670,8 @@ font_text_scale
 .RB ( subfont-text-scale ") (solo FreeType),"
 gui_skin
 .RB ( skin ),
+load_fullscreen
+.RB ( fs ),
 osd_level
 .RB ( osdlevel ),
 softvol
@@ -3982,7 +3983,7 @@ Utilizza la funzione sleep mentre aspetta che finisca la visualizzazione
 .PD 1
 .
 .TP
-.B vdpau (con \-vc ffmpeg12vdpau, ffwmv3vdpau, ffvc1vdpau, ffh264vdpau
+.B vdpau (con \-vc ffmpeg2vdpau, ffwmv3vdpau, ffvc1vdpau, ffh264vdpau
 o ffodivxvdpau)
 Driver di uscita video che usa VDPAU per la docodifica video via hardware.
 Gestisce anche la visualizzazione di video decodificato via software.
@@ -12549,7 +12550,7 @@ MPlayer è stato scritto inizialmente da Arpad Gereoffy.
 Vedi il file AUTHORS per una lista di alcuni dei tanti altri contributori.
 .
 .TP
-MPlayer è (C) 2000\-2019 The MPlayer Team
+MPlayer è (C) 2000\-2022 The MPlayer Team
 .PP
 Questa pagina di manuale (versione inglese) è stata scritta principalmente da
 Gabucino, Jonas Jermann e Diego Biurrun.

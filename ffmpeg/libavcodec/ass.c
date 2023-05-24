@@ -21,16 +21,17 @@
 
 #include "avcodec.h"
 #include "ass.h"
-#include "libavutil/avassert.h"
 #include "libavutil/avstring.h"
 #include "libavutil/bprint.h"
 #include "libavutil/common.h"
 
-int ff_ass_subtitle_header(AVCodecContext *avctx,
-                           const char *font, int font_size,
-                           int color, int back_color,
-                           int bold, int italic, int underline,
-                           int border_style, int alignment)
+int ff_ass_subtitle_header_full(AVCodecContext *avctx,
+                                int play_res_x, int play_res_y,
+                                const char *font, int font_size,
+                                int primary_color, int secondary_color,
+                                int outline_color, int back_color,
+                                int bold, int italic, int underline,
+                                int border_style, int alignment)
 {
     avctx->subtitle_header = av_asprintf(
              "[Script Info]\r\n"
@@ -38,6 +39,7 @@ int ff_ass_subtitle_header(AVCodecContext *avctx,
              "ScriptType: v4.00+\r\n"
              "PlayResX: %d\r\n"
              "PlayResY: %d\r\n"
+             "ScaledBorderAndShadow: yes\r\n"
              "\r\n"
              "[V4+ Styles]\r\n"
 
@@ -67,14 +69,28 @@ int ff_ass_subtitle_header(AVCodecContext *avctx,
              "[Events]\r\n"
              "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text\r\n",
              !(avctx->flags & AV_CODEC_FLAG_BITEXACT) ? AV_STRINGIFY(LIBAVCODEC_VERSION) : "",
-             ASS_DEFAULT_PLAYRESX, ASS_DEFAULT_PLAYRESY,
-             font, font_size, color, color, back_color, back_color,
+             play_res_x, play_res_y, font, font_size,
+             primary_color, secondary_color, outline_color, back_color,
              -bold, -italic, -underline, border_style, alignment);
 
     if (!avctx->subtitle_header)
         return AVERROR(ENOMEM);
     avctx->subtitle_header_size = strlen(avctx->subtitle_header);
     return 0;
+}
+
+int ff_ass_subtitle_header(AVCodecContext *avctx,
+                           const char *font, int font_size,
+                           int color, int back_color,
+                           int bold, int italic, int underline,
+                           int border_style, int alignment)
+{
+    return ff_ass_subtitle_header_full(avctx,
+                               ASS_DEFAULT_PLAYRESX, ASS_DEFAULT_PLAYRESY,
+                               font, font_size, color, color,
+                               back_color, back_color,
+                               bold, italic, underline,
+                               border_style, alignment);
 }
 
 int ff_ass_subtitle_header_default(AVCodecContext *avctx)
@@ -102,22 +118,22 @@ int ff_ass_add_rect(AVSubtitle *sub, const char *dialog,
                     int readorder, int layer, const char *style,
                     const char *speaker)
 {
+    AVSubtitleRect **rects, *rect;
     char *ass_str;
-    AVSubtitleRect **rects;
 
-    rects = av_realloc_array(sub->rects, (sub->num_rects+1), sizeof(*sub->rects));
+    rects = av_realloc_array(sub->rects, sub->num_rects+1, sizeof(*sub->rects));
     if (!rects)
         return AVERROR(ENOMEM);
     sub->rects = rects;
-    rects[sub->num_rects]       = av_mallocz(sizeof(*rects[0]));
-    if (!rects[sub->num_rects])
+    rect       = av_mallocz(sizeof(*rect));
+    if (!rect)
         return AVERROR(ENOMEM);
-    rects[sub->num_rects]->type = SUBTITLE_ASS;
+    rects[sub->num_rects++] = rect;
+    rect->type = SUBTITLE_ASS;
     ass_str = ff_ass_get_dialog(readorder, layer, style, speaker, dialog);
     if (!ass_str)
         return AVERROR(ENOMEM);
-    rects[sub->num_rects]->ass = ass_str;
-    sub->num_rects++;
+    rect->ass = ass_str;
     return 0;
 }
 

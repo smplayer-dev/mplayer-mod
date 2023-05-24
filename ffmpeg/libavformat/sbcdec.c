@@ -22,7 +22,7 @@
 #include "avformat.h"
 #include "rawdec.h"
 
-AVInputFormat ff_sbc_demuxer = {
+const AVInputFormat ff_sbc_demuxer = {
     .name           = "sbc",
     .long_name      = NULL_IF_CONFIG_SMALL("raw SBC (low-complexity subband codec)"),
     .extensions     = "sbc,msbc",
@@ -30,4 +30,6 @@ AVInputFormat ff_sbc_demuxer = {
     .read_header    = ff_raw_audio_read_header,
     .read_packet    = ff_raw_read_partial_packet,
     .flags          = AVFMT_GENERIC_INDEX,
+    .priv_data_size = sizeof(FFRawDemuxerContext),
+    .priv_class     = &ff_raw_demuxer_class,
 };

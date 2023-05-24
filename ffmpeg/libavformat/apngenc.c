@@ -91,9 +91,9 @@ static int apng_write_header(AVFormatContext *format_context)
         return AVERROR(EINVAL);
     }
 
-    if (apng->last_delay.num > USHRT_MAX || apng->last_delay.den > USHRT_MAX) {
+    if (apng->last_delay.num > UINT16_MAX || apng->last_delay.den > UINT16_MAX) {
         av_reduce(&apng->last_delay.num, &apng->last_delay.den,
-                  apng->last_delay.num, apng->last_delay.den, USHRT_MAX);
+                  apng->last_delay.num, apng->last_delay.den, UINT16_MAX);
         av_log(format_context, AV_LOG_WARNING,
                "Last frame delay is too precise. Reducing to %d/%d (%f).\n",
                apng->last_delay.num, apng->last_delay.den, (double)apng->last_delay.num / apng->last_delay.den);
@@ -119,7 +119,7 @@ static int flush_packet(AVFormatContext *format_context, AVPacket *packet)
     AVIOContext *io_context = format_context->pb;
     AVStream *codec_stream = format_context->streams[0];
     uint8_t *side_data = NULL;
-    int side_data_size = 0;
+    size_t side_data_size;
 
     av_assert0(apng->prev_packet);
 
@@ -191,7 +191,7 @@ static int flush_packet(AVFormatContext *format_context, AVPacket *packet)
                 if (packet) {
                     int64_t delay_num_raw = (packet->dts - apng->prev_packet->dts) * codec_stream->time_base.num;
                     int64_t delay_den_raw = codec_stream->time_base.den;
-                    if (!av_reduce(&delay.num, &delay.den, delay_num_raw, delay_den_raw, USHRT_MAX) &&
+                    if (!av_reduce(&delay.num, &delay.den, delay_num_raw, delay_den_raw, UINT16_MAX) &&
                         !apng->framerate_warned) {
                         av_log(format_context, AV_LOG_WARNING,
                                "Frame rate is too high or specified too precisely. Unable to copy losslessly.\n");
@@ -251,7 +251,6 @@ static int apng_write_trailer(AVFormatContext *format_context)
 
     if (apng->prev_packet) {
         ret = flush_packet(format_context, NULL);
-        av_freep(&apng->prev_packet);
         if (ret < 0)
             return ret;
     }
@@ -266,19 +265,25 @@ static int apng_write_trailer(AVFormatContext *format_context)
         apng_write_chunk(io_context, MKBETAG('a', 'c', 'T', 'L'), buf, 8);
     }
 
-    av_freep(&apng->extra_data);
-    apng->extra_data = 0;
-
     return 0;
+}
+
+static void apng_deinit(AVFormatContext *s)
+{
+    APNGMuxContext *apng = s->priv_data;
+
+    av_packet_free(&apng->prev_packet);
+    av_freep(&apng->extra_data);
+    apng->extra_data_size = 0;
 }
 
 #define OFFSET(x) offsetof(APNGMuxContext, x)
 #define ENC AV_OPT_FLAG_ENCODING_PARAM
 static const AVOption options[] = {
     { "plays", "Number of times to play the output: 0 - infinite loop, 1 - no loop", OFFSET(plays),
-      AV_OPT_TYPE_INT, { .i64 = 1 }, 0, UINT_MAX, ENC },
+      AV_OPT_TYPE_INT, { .i64 = 1 }, 0, UINT16_MAX, ENC },
     { "final_delay", "Force delay after the last frame", OFFSET(last_delay),
-      AV_OPT_TYPE_RATIONAL, { .dbl = 0 }, 0, USHRT_MAX, ENC },
+      AV_OPT_TYPE_RATIONAL, { .dbl = 0 }, 0, UINT16_MAX, ENC },
     { NULL },
 };
 
@@ -289,7 +294,7 @@ static const AVClass apng_muxer_class = {
     .option     = options,
 };
 
-AVOutputFormat ff_apng_muxer = {
+const AVOutputFormat ff_apng_muxer = {
     .name           = "apng",
     .long_name      = NULL_IF_CONFIG_SMALL("Animated Portable Network Graphics"),
     .mime_type      = "image/png",
@@ -300,6 +305,7 @@ AVOutputFormat ff_apng_muxer = {
     .write_header   = apng_write_header,
     .write_packet   = apng_write_packet,
     .write_trailer  = apng_write_trailer,
+    .deinit         = apng_deinit,
     .priv_class     = &apng_muxer_class,
     .flags          = AVFMT_VARIABLE_FPS,
 };

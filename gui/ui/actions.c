@@ -439,7 +439,7 @@ play:
             uiFullScreen();
 
             if (!guiApp.videoWindow.isFullScreen)
-                wsWindowResize(&guiApp.videoWindow, iparam ? guiInfo.VideoWidth : guiApp.video.width, iparam ? guiInfo.VideoHeight : guiApp.video.height);
+                wsWindowResize(&guiApp.videoWindow, iparam >= 0 ? guiInfo.VideoWidth : guiApp.video.width, iparam >= 0 ? guiInfo.VideoHeight : guiApp.video.height);
         }
 
         if (guiApp.videoWindow.isFullScreen)
@@ -661,7 +661,7 @@ void uiChangeSkin(char *name)
 
     if (skinRead(name) != 0) {
         if (skinRead(skinName) != 0) {
-            gmp_msg(MSGT_GPLAYER, MSGL_FATAL, MSGTR_GUI_MSG_SkinCfgError, skinName);
+            gmp_msg(MSGT_GPLAYER, MSGL_FATAL, _(MSGTR_GUI_MSG_SkinCfgError), skinName);
             mplayer(MPLAYER_EXIT_GUI, EXIT_ERROR, 0);
         }
     }

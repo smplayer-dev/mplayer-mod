@@ -69,7 +69,6 @@ typedef struct LutContext {
     int is_planar;
     int is_16bit;
     int step;
-    int negate_alpha; /* only used by negate */
 } LutContext;
 
 #define Y 0
@@ -81,7 +80,7 @@ typedef struct LutContext {
 #define A 3
 
 #define OFFSET(x) offsetof(LutContext, x)
-#define FLAGS AV_OPT_FLAG_FILTERING_PARAM|AV_OPT_FLAG_VIDEO_PARAM
+#define FLAGS AV_OPT_FLAG_FILTERING_PARAM|AV_OPT_FLAG_VIDEO_PARAM|AV_OPT_FLAG_RUNTIME_PARAM
 
 static const AVOption options[] = {
     { "c0", "set component #0 expression", OFFSET(comp_expr_str[0]),  AV_OPT_TYPE_STRING, { .str = "clipval" }, .flags = FLAGS },
@@ -150,10 +149,7 @@ static int query_formats(AVFilterContext *ctx)
     const enum AVPixelFormat *pix_fmts = s->is_rgb ? rgb_pix_fmts :
                                                      s->is_yuv ? yuv_pix_fmts :
                                                                  all_pix_fmts;
-    AVFilterFormats *fmts_list = ff_make_format_list(pix_fmts);
-    if (!fmts_list)
-        return AVERROR(ENOMEM);
-    return ff_set_common_formats(ctx, fmts_list);
+    return ff_set_common_formats_from_list(ctx, pix_fmts);
 }
 
 /**
@@ -337,13 +333,194 @@ static int config_props(AVFilterLink *inlink)
     return 0;
 }
 
+struct thread_data {
+    AVFrame *in;
+    AVFrame *out;
+
+    int w;
+    int h;
+};
+
+#define LOAD_PACKED_COMMON\
+    LutContext *s = ctx->priv;\
+    const struct thread_data *td = arg;\
+\
+    int i, j;\
+    const int w = td->w;\
+    const int h = td->h;\
+    AVFrame *in = td->in;\
+    AVFrame *out = td->out;\
+    const uint16_t (*tab)[256*256] = (const uint16_t (*)[256*256])s->lut;\
+    const int step = s->step;\
+\
+    const int slice_start = (h *  jobnr   ) / nb_jobs;\
+    const int slice_end   = (h * (jobnr+1)) / nb_jobs;\
+
+/* packed, 16-bit */
+static int lut_packed_16bits(AVFilterContext *ctx, void *arg, int jobnr, int nb_jobs)
+{
+    LOAD_PACKED_COMMON
+
+    uint16_t *inrow, *outrow, *inrow0, *outrow0;
+    const int in_linesize  =  in->linesize[0] / 2;
+    const int out_linesize = out->linesize[0] / 2;
+    inrow0  = (uint16_t *)in ->data[0];
+    outrow0 = (uint16_t *)out->data[0];
+
+    for (i = slice_start; i < slice_end; i++) {
+        inrow  = inrow0 + i * in_linesize;
+        outrow = outrow0 + i * out_linesize;
+        for (j = 0; j < w; j++) {
+
+            switch (step) {
+#if HAVE_BIGENDIAN
+            case 4:  outrow[3] = av_bswap16(tab[3][av_bswap16(inrow[3])]); // Fall-through
+            case 3:  outrow[2] = av_bswap16(tab[2][av_bswap16(inrow[2])]); // Fall-through
+            case 2:  outrow[1] = av_bswap16(tab[1][av_bswap16(inrow[1])]); // Fall-through
+            default: outrow[0] = av_bswap16(tab[0][av_bswap16(inrow[0])]);
+#else
+            case 4:  outrow[3] = tab[3][inrow[3]]; // Fall-through
+            case 3:  outrow[2] = tab[2][inrow[2]]; // Fall-through
+            case 2:  outrow[1] = tab[1][inrow[1]]; // Fall-through
+            default: outrow[0] = tab[0][inrow[0]];
+#endif
+            }
+            outrow += step;
+            inrow  += step;
+        }
+    }
+
+    return 0;
+}
+
+/* packed, 8-bit */
+static int lut_packed_8bits(AVFilterContext *ctx, void *arg, int jobnr, int nb_jobs)
+{
+    LOAD_PACKED_COMMON
+
+    uint8_t *inrow, *outrow, *inrow0, *outrow0;
+    const int in_linesize  =  in->linesize[0];
+    const int out_linesize = out->linesize[0];
+    inrow0  = in ->data[0];
+    outrow0 = out->data[0];
+
+    for (i = slice_start; i < slice_end; i++) {
+        inrow  = inrow0 + i * in_linesize;
+        outrow = outrow0 + i * out_linesize;
+        for (j = 0; j < w; j++) {
+            switch (step) {
+            case 4:  outrow[3] = tab[3][inrow[3]]; // Fall-through
+            case 3:  outrow[2] = tab[2][inrow[2]]; // Fall-through
+            case 2:  outrow[1] = tab[1][inrow[1]]; // Fall-through
+            default: outrow[0] = tab[0][inrow[0]];
+            }
+            outrow += step;
+            inrow  += step;
+        }
+    }
+
+    return 0;
+}
+
+#define LOAD_PLANAR_COMMON\
+    LutContext *s = ctx->priv;\
+    const struct thread_data *td = arg;\
+    int i, j, plane;\
+    AVFrame *in = td->in;\
+    AVFrame *out = td->out;\
+
+#define PLANAR_COMMON\
+        int vsub = plane == 1 || plane == 2 ? s->vsub : 0;\
+        int hsub = plane == 1 || plane == 2 ? s->hsub : 0;\
+        int h = AV_CEIL_RSHIFT(td->h, vsub);\
+        int w = AV_CEIL_RSHIFT(td->w, hsub);\
+        const uint16_t *tab = s->lut[plane];\
+\
+        const int slice_start = (h *  jobnr   ) / nb_jobs;\
+        const int slice_end   = (h * (jobnr+1)) / nb_jobs;\
+
+/* planar >8 bit depth */
+static int lut_planar_16bits(AVFilterContext *ctx, void *arg, int jobnr, int nb_jobs)
+{
+    LOAD_PLANAR_COMMON
+
+    uint16_t *inrow, *outrow;
+
+    for (plane = 0; plane < 4 && in->data[plane] && in->linesize[plane]; plane++) {
+        PLANAR_COMMON
+
+        const int in_linesize  =  in->linesize[plane] / 2;
+        const int out_linesize = out->linesize[plane] / 2;
+
+        inrow  = (uint16_t *)in ->data[plane] + slice_start * in_linesize;
+        outrow = (uint16_t *)out->data[plane] + slice_start * out_linesize;
+
+        for (i = slice_start; i < slice_end; i++) {
+            for (j = 0; j < w; j++) {
+#if HAVE_BIGENDIAN
+                outrow[j] = av_bswap16(tab[av_bswap16(inrow[j])]);
+#else
+                outrow[j] = tab[inrow[j]];
+#endif
+            }
+            inrow  += in_linesize;
+            outrow += out_linesize;
+        }
+    }
+
+    return 0;
+}
+
+/* planar 8bit depth */
+static int lut_planar_8bits(AVFilterContext *ctx, void *arg, int jobnr, int nb_jobs)
+{
+    LOAD_PLANAR_COMMON
+
+    uint8_t *inrow, *outrow;
+
+    for (plane = 0; plane < 4 && in->data[plane] && in->linesize[plane]; plane++) {
+        PLANAR_COMMON
+
+        const int in_linesize  =  in->linesize[plane];
+        const int out_linesize = out->linesize[plane];
+
+        inrow  = in ->data[plane] + slice_start * in_linesize;
+        outrow = out->data[plane] + slice_start * out_linesize;
+
+        for (i = slice_start; i < slice_end; i++) {
+            for (j = 0; j < w; j++)
+                outrow[j] = tab[inrow[j]];
+            inrow  += in_linesize;
+            outrow += out_linesize;
+        }
+    }
+
+    return 0;
+}
+
+#define PACKED_THREAD_DATA\
+ struct thread_data td = {\
+            .in  = in,\
+            .out = out,\
+            .w   = inlink->w,\
+            .h   = in->height,\
+        };\
+
+#define PLANAR_THREAD_DATA\
+ struct thread_data td = {\
+            .in  = in,\
+            .out = out,\
+            .w   = inlink->w,\
+            .h   = inlink->h,\
+        };\
+
 static int filter_frame(AVFilterLink *inlink, AVFrame *in)
 {
     AVFilterContext *ctx = inlink->dst;
     LutContext *s = ctx->priv;
     AVFilterLink *outlink = ctx->outputs[0];
     AVFrame *out;
-    int i, j, plane, direct = 0;
+    int direct = 0;
 
     if (av_frame_is_writable(in)) {
         direct = 1;
@@ -359,121 +536,24 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *in)
 
     if (s->is_rgb && s->is_16bit && !s->is_planar) {
         /* packed, 16-bit */
-        uint16_t *inrow, *outrow, *inrow0, *outrow0;
-        const int w = inlink->w;
-        const int h = in->height;
-        const uint16_t (*tab)[256*256] = (const uint16_t (*)[256*256])s->lut;
-        const int in_linesize  =  in->linesize[0] / 2;
-        const int out_linesize = out->linesize[0] / 2;
-        const int step = s->step;
-
-        inrow0  = (uint16_t*) in ->data[0];
-        outrow0 = (uint16_t*) out->data[0];
-
-        for (i = 0; i < h; i ++) {
-            inrow  = inrow0;
-            outrow = outrow0;
-            for (j = 0; j < w; j++) {
-
-                switch (step) {
-#if HAVE_BIGENDIAN
-                case 4:  outrow[3] = av_bswap16(tab[3][av_bswap16(inrow[3])]); // Fall-through
-                case 3:  outrow[2] = av_bswap16(tab[2][av_bswap16(inrow[2])]); // Fall-through
-                case 2:  outrow[1] = av_bswap16(tab[1][av_bswap16(inrow[1])]); // Fall-through
-                default: outrow[0] = av_bswap16(tab[0][av_bswap16(inrow[0])]);
-#else
-                case 4:  outrow[3] = tab[3][inrow[3]]; // Fall-through
-                case 3:  outrow[2] = tab[2][inrow[2]]; // Fall-through
-                case 2:  outrow[1] = tab[1][inrow[1]]; // Fall-through
-                default: outrow[0] = tab[0][inrow[0]];
-#endif
-                }
-                outrow += step;
-                inrow  += step;
-            }
-            inrow0  += in_linesize;
-            outrow0 += out_linesize;
-        }
+        PACKED_THREAD_DATA
+        ff_filter_execute(ctx, lut_packed_16bits, &td, NULL,
+                          FFMIN(in->height, ff_filter_get_nb_threads(ctx)));
     } else if (s->is_rgb && !s->is_planar) {
-        /* packed */
-        uint8_t *inrow, *outrow, *inrow0, *outrow0;
-        const int w = inlink->w;
-        const int h = in->height;
-        const uint16_t (*tab)[256*256] = (const uint16_t (*)[256*256])s->lut;
-        const int in_linesize  =  in->linesize[0];
-        const int out_linesize = out->linesize[0];
-        const int step = s->step;
-
-        inrow0  = in ->data[0];
-        outrow0 = out->data[0];
-
-        for (i = 0; i < h; i ++) {
-            inrow  = inrow0;
-            outrow = outrow0;
-            for (j = 0; j < w; j++) {
-                switch (step) {
-                case 4:  outrow[3] = tab[3][inrow[3]]; // Fall-through
-                case 3:  outrow[2] = tab[2][inrow[2]]; // Fall-through
-                case 2:  outrow[1] = tab[1][inrow[1]]; // Fall-through
-                default: outrow[0] = tab[0][inrow[0]];
-                }
-                outrow += step;
-                inrow  += step;
-            }
-            inrow0  += in_linesize;
-            outrow0 += out_linesize;
-        }
+        /* packed 8 bits */
+        PACKED_THREAD_DATA
+        ff_filter_execute(ctx, lut_packed_8bits, &td, NULL,
+                          FFMIN(in->height, ff_filter_get_nb_threads(ctx)));
     } else if (s->is_16bit) {
-        // planar >8 bit depth
-        uint16_t *inrow, *outrow;
-
-        for (plane = 0; plane < 4 && in->data[plane] && in->linesize[plane]; plane++) {
-            int vsub = plane == 1 || plane == 2 ? s->vsub : 0;
-            int hsub = plane == 1 || plane == 2 ? s->hsub : 0;
-            int h = AV_CEIL_RSHIFT(inlink->h, vsub);
-            int w = AV_CEIL_RSHIFT(inlink->w, hsub);
-            const uint16_t *tab = s->lut[plane];
-            const int in_linesize  =  in->linesize[plane] / 2;
-            const int out_linesize = out->linesize[plane] / 2;
-
-            inrow  = (uint16_t *)in ->data[plane];
-            outrow = (uint16_t *)out->data[plane];
-
-            for (i = 0; i < h; i++) {
-                for (j = 0; j < w; j++) {
-#if HAVE_BIGENDIAN
-                    outrow[j] = av_bswap16(tab[av_bswap16(inrow[j])]);
-#else
-                    outrow[j] = tab[inrow[j]];
-#endif
-                }
-                inrow  += in_linesize;
-                outrow += out_linesize;
-            }
-        }
+        /* planar >8 bit depth */
+        PLANAR_THREAD_DATA
+        ff_filter_execute(ctx, lut_planar_16bits, &td, NULL,
+                          FFMIN(in->height, ff_filter_get_nb_threads(ctx)));
     } else {
         /* planar 8bit depth */
-        uint8_t *inrow, *outrow;
-
-        for (plane = 0; plane < 4 && in->data[plane] && in->linesize[plane]; plane++) {
-            int vsub = plane == 1 || plane == 2 ? s->vsub : 0;
-            int hsub = plane == 1 || plane == 2 ? s->hsub : 0;
-            int h = AV_CEIL_RSHIFT(inlink->h, vsub);
-            int w = AV_CEIL_RSHIFT(inlink->w, hsub);
-            const uint16_t *tab = s->lut[plane];
-            const int in_linesize  =  in->linesize[plane];
-            const int out_linesize = out->linesize[plane];
-
-            inrow  = in ->data[plane];
-            outrow = out->data[plane];
-
-            for (i = 0; i < h; i++) {
-                for (j = 0; j < w; j++)
-                    outrow[j] = tab[inrow[j]];
-                inrow  += in_linesize;
-                outrow += out_linesize;
-            }
-        }
+        PLANAR_THREAD_DATA
+        ff_filter_execute(ctx, lut_planar_8bits, &td, NULL,
+                          FFMIN(in->height, ff_filter_get_nb_threads(ctx)));
     }
 
     if (!direct)
@@ -482,52 +562,57 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *in)
     return ff_filter_frame(outlink, out);
 }
 
+static int process_command(AVFilterContext *ctx, const char *cmd, const char *args,
+                           char *res, int res_len, int flags)
+{
+    int ret = ff_filter_process_command(ctx, cmd, args, res, res_len, flags);
+
+    if (ret < 0)
+        return ret;
+
+    return config_props(ctx->inputs[0]);
+}
+
 static const AVFilterPad inputs[] = {
     { .name         = "default",
       .type         = AVMEDIA_TYPE_VIDEO,
       .filter_frame = filter_frame,
       .config_props = config_props,
     },
-    { NULL }
 };
 static const AVFilterPad outputs[] = {
     { .name = "default",
       .type = AVMEDIA_TYPE_VIDEO,
     },
-    { NULL }
 };
 
-#define DEFINE_LUT_FILTER(name_, description_)                          \
-    AVFilter ff_vf_##name_ = {                                          \
+#define DEFINE_LUT_FILTER(name_, description_, priv_class_)             \
+    const AVFilter ff_vf_##name_ = {                                    \
         .name          = #name_,                                        \
         .description   = NULL_IF_CONFIG_SMALL(description_),            \
+        .priv_class    = &priv_class_ ## _class,                        \
         .priv_size     = sizeof(LutContext),                            \
-        .priv_class    = &name_ ## _class,                              \
         .init          = name_##_init,                                  \
         .uninit        = uninit,                                        \
-        .query_formats = query_formats,                                 \
-        .inputs        = inputs,                                        \
-        .outputs       = outputs,                                       \
-        .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC,        \
+        FILTER_INPUTS(inputs),                                          \
+        FILTER_OUTPUTS(outputs),                                        \
+        FILTER_QUERY_FUNC(query_formats),                               \
+        .flags         = AVFILTER_FLAG_SUPPORT_TIMELINE_GENERIC |       \
+                         AVFILTER_FLAG_SLICE_THREADS,                   \
+        .process_command = process_command,                             \
     }
+
+AVFILTER_DEFINE_CLASS_EXT(lut, "lut/lutyuv/lutrgb", options);
 
 #if CONFIG_LUT_FILTER
 
-#define lut_options options
-AVFILTER_DEFINE_CLASS(lut);
-
-static int lut_init(AVFilterContext *ctx)
-{
-    return 0;
-}
-
-DEFINE_LUT_FILTER(lut, "Compute and apply a lookup table to the RGB/YUV input video.");
+#define lut_init NULL
+DEFINE_LUT_FILTER(lut, "Compute and apply a lookup table to the RGB/YUV input video.",
+                  lut);
+#undef lut_init
 #endif
 
 #if CONFIG_LUTYUV_FILTER
-
-#define lutyuv_options options
-AVFILTER_DEFINE_CLASS(lutyuv);
 
 static av_cold int lutyuv_init(AVFilterContext *ctx)
 {
@@ -538,13 +623,11 @@ static av_cold int lutyuv_init(AVFilterContext *ctx)
     return 0;
 }
 
-DEFINE_LUT_FILTER(lutyuv, "Compute and apply a lookup table to the YUV input video.");
+DEFINE_LUT_FILTER(lutyuv, "Compute and apply a lookup table to the YUV input video.",
+                  lut);
 #endif
 
 #if CONFIG_LUTRGB_FILTER
-
-#define lutrgb_options options
-AVFILTER_DEFINE_CLASS(lutrgb);
 
 static av_cold int lutrgb_init(AVFilterContext *ctx)
 {
@@ -555,37 +638,6 @@ static av_cold int lutrgb_init(AVFilterContext *ctx)
     return 0;
 }
 
-DEFINE_LUT_FILTER(lutrgb, "Compute and apply a lookup table to the RGB input video.");
-#endif
-
-#if CONFIG_NEGATE_FILTER
-
-static const AVOption negate_options[] = {
-    { "negate_alpha", NULL, OFFSET(negate_alpha), AV_OPT_TYPE_BOOL, { .i64 = 0 }, 0, 1, FLAGS },
-    { NULL }
-};
-
-AVFILTER_DEFINE_CLASS(negate);
-
-static av_cold int negate_init(AVFilterContext *ctx)
-{
-    LutContext *s = ctx->priv;
-    int i;
-
-    av_log(ctx, AV_LOG_DEBUG, "negate_alpha:%d\n", s->negate_alpha);
-
-    for (i = 0; i < 4; i++) {
-        s->comp_expr_str[i] = av_strdup((i == 3 && !s->negate_alpha) ?
-                                          "val" : "negval");
-        if (!s->comp_expr_str[i]) {
-            uninit(ctx);
-            return AVERROR(ENOMEM);
-        }
-    }
-
-    return 0;
-}
-
-DEFINE_LUT_FILTER(negate, "Negate input video.");
-
+DEFINE_LUT_FILTER(lutrgb, "Compute and apply a lookup table to the RGB input video.",
+                  lut);
 #endif

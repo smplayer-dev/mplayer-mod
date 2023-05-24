@@ -32,6 +32,7 @@ static const struct {
     {"isBE",        isBE},
     {"isYUV",       isYUV},
     {"isPlanarYUV", isPlanarYUV},
+    {"isSemiPlanarYUV", isSemiPlanarYUV},
     {"isRGB",       isRGB},
     {"Gray",        isGray},
     {"RGBinInt",    isRGBinInt},
@@ -44,6 +45,8 @@ static const struct {
     {"PackedRGB",   isPackedRGB},
     {"PlanarRGB",   isPlanarRGB},
     {"usePal",      usePal},
+    {"DataInHighBits", isDataInHighBits},
+    {"SwappedChroma", isSwappedChroma},
 };
 
 static int cmp_str(const void *a, const void *b)

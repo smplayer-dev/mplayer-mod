@@ -52,6 +52,7 @@
 #include "codec-cfg.h"
 #include "m_option.h"
 #include "mp_core.h"
+#include "libavutil/avstring.h"
 #include "libavutil/common.h"
 
 #include "actions.h"
@@ -370,7 +371,7 @@ static void uiMainDND(int num,char** files)
       }
       listMgr(PLAYLIST_ITEM_APPEND,item);
     } else {
-      mp_msg( MSGT_GPLAYER,MSGL_WARN,MSGTR_GUI_MSG_NotAFile1,str );
+      mp_msg( MSGT_GPLAYER,MSGL_WARN,_(MSGTR_GUI_MSG_NotAFile1),str );
     }
     free( str );
   }
@@ -393,7 +394,10 @@ void uiMainInit (void)
 
   if (!mainDrawBuffer)
   {
-    gmp_msg(MSGT_GPLAYER, MSGL_FATAL, "[main] " MSGTR_GUI_MSG_MemoryErrorWindow);
+    char msg[80] = "[main] ";
+
+    av_strlcat(msg, _(MSGTR_GUI_MSG_MemoryErrorWindow), sizeof(msg));
+    gmp_msg(MSGT_GPLAYER, MSGL_FATAL, msg);
     mplayer(MPLAYER_EXIT_GUI, EXIT_ERROR, 0);
   }
 

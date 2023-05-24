@@ -22,11 +22,13 @@
 #include "libavutil/time.h"
 #include "avfilter.h"
 #include "internal.h"
+#include <float.h>
 
 typedef struct RealtimeContext {
     const AVClass *class;
     int64_t delta;
     int64_t limit;
+    double speed;
     unsigned inited;
 } RealtimeContext;
 
@@ -36,7 +38,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
     RealtimeContext *s = ctx->priv;
 
     if (frame->pts != AV_NOPTS_VALUE) {
-        int64_t pts = av_rescale_q(frame->pts, inlink->time_base, AV_TIME_BASE_Q);
+        int64_t pts = av_rescale_q(frame->pts, inlink->time_base, AV_TIME_BASE_Q) / s->speed;
         int64_t now = av_gettime_relative();
         int64_t sleep = pts - now + s->delta;
         if (!s->inited) {
@@ -44,7 +46,7 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
             sleep = 0;
             s->delta = now - pts;
         }
-        if (sleep > s->limit || sleep < -s->limit) {
+        if (FFABS(sleep) > s->limit / s->speed) {
             av_log(ctx, AV_LOG_WARNING,
                    "time discontinuity detected: %"PRIi64" us, resetting\n",
                    sleep);
@@ -65,12 +67,13 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *frame)
 #define FLAGS AV_OPT_FLAG_VIDEO_PARAM | AV_OPT_FLAG_AUDIO_PARAM | AV_OPT_FLAG_FILTERING_PARAM
 static const AVOption options[] = {
     { "limit", "sleep time limit", OFFSET(limit), AV_OPT_TYPE_DURATION, { .i64 = 2000000 }, 0, INT64_MAX, FLAGS },
+    { "speed", "speed factor", OFFSET(speed), AV_OPT_TYPE_DOUBLE, { .dbl = 1.0 }, DBL_MIN, DBL_MAX, FLAGS },
     { NULL }
 };
 
+AVFILTER_DEFINE_CLASS_EXT(realtime, "(a)realtime", options);
+
 #if CONFIG_REALTIME_FILTER
-#define realtime_options options
-AVFILTER_DEFINE_CLASS(realtime);
 
 static const AVFilterPad avfilter_vf_realtime_inputs[] = {
     {
@@ -78,7 +81,6 @@ static const AVFilterPad avfilter_vf_realtime_inputs[] = {
         .type         = AVMEDIA_TYPE_VIDEO,
         .filter_frame = filter_frame,
     },
-    { NULL }
 };
 
 static const AVFilterPad avfilter_vf_realtime_outputs[] = {
@@ -86,23 +88,20 @@ static const AVFilterPad avfilter_vf_realtime_outputs[] = {
         .name = "default",
         .type = AVMEDIA_TYPE_VIDEO,
     },
-    { NULL }
 };
 
-AVFilter ff_vf_realtime = {
+const AVFilter ff_vf_realtime = {
     .name        = "realtime",
     .description = NULL_IF_CONFIG_SMALL("Slow down filtering to match realtime."),
     .priv_size   = sizeof(RealtimeContext),
     .priv_class  = &realtime_class,
-    .inputs      = avfilter_vf_realtime_inputs,
-    .outputs     = avfilter_vf_realtime_outputs,
+    .flags       = AVFILTER_FLAG_METADATA_ONLY,
+    FILTER_INPUTS(avfilter_vf_realtime_inputs),
+    FILTER_OUTPUTS(avfilter_vf_realtime_outputs),
 };
 #endif /* CONFIG_REALTIME_FILTER */
 
 #if CONFIG_AREALTIME_FILTER
-
-#define arealtime_options options
-AVFILTER_DEFINE_CLASS(arealtime);
 
 static const AVFilterPad arealtime_inputs[] = {
     {
@@ -110,7 +109,6 @@ static const AVFilterPad arealtime_inputs[] = {
         .type         = AVMEDIA_TYPE_AUDIO,
         .filter_frame = filter_frame,
     },
-    { NULL }
 };
 
 static const AVFilterPad arealtime_outputs[] = {
@@ -118,15 +116,15 @@ static const AVFilterPad arealtime_outputs[] = {
         .name = "default",
         .type = AVMEDIA_TYPE_AUDIO,
     },
-    { NULL }
 };
 
-AVFilter ff_af_arealtime = {
+const AVFilter ff_af_arealtime = {
     .name        = "arealtime",
     .description = NULL_IF_CONFIG_SMALL("Slow down filtering to match realtime."),
+    .priv_class  = &realtime_class,
     .priv_size   = sizeof(RealtimeContext),
-    .priv_class  = &arealtime_class,
-    .inputs      = arealtime_inputs,
-    .outputs     = arealtime_outputs,
+    .flags       = AVFILTER_FLAG_METADATA_ONLY,
+    FILTER_INPUTS(arealtime_inputs),
+    FILTER_OUTPUTS(arealtime_outputs),
 };
 #endif /* CONFIG_AREALTIME_FILTER */

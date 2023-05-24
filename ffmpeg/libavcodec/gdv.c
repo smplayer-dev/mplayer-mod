@@ -23,6 +23,7 @@
 #include "libavutil/common.h"
 #include "avcodec.h"
 #include "bytestream.h"
+#include "decode.h"
 #include "internal.h"
 
 typedef struct GDVContext {
@@ -308,7 +309,7 @@ static int decompress_5(AVCodecContext *avctx, unsigned skip)
             int len;
             int b = bytestream2_get_byte(gb);
             if (b == 0) {
-                break;
+                return 0;
             }
             if (b != 0xFF) {
                 len = b;
@@ -323,6 +324,8 @@ static int decompress_5(AVCodecContext *avctx, unsigned skip)
             lz_copy(pb, g2, off, len);
         }
     }
+    if (bytestream2_get_bytes_left_p(pb) > 0)
+        return AVERROR_INVALIDDATA;
     return 0;
 }
 
@@ -356,7 +359,8 @@ static int decompress_68(AVCodecContext *avctx, unsigned skip, unsigned use8)
                     if (val != ((1 << lbits) - 1)) {
                         break;
                     }
-                    assert(lbits < 16);
+                    if (lbits >= 16)
+                        return AVERROR_INVALIDDATA;
                 }
                 for (i = 0; i < len; i++) {
                     bytestream2_put_byte(pb, bytestream2_get_byte(gb));
@@ -445,6 +449,9 @@ static int decompress_68(AVCodecContext *avctx, unsigned skip, unsigned use8)
         }
     }
 
+    if (bytestream2_get_bytes_left_p(pb) > 0)
+        return AVERROR_INVALIDDATA;
+
     return 0;
 }
 
@@ -455,8 +462,7 @@ static int gdv_decode_frame(AVCodecContext *avctx, void *data,
     GetByteContext *gb = &gdv->gb;
     PutByteContext *pb = &gdv->pb;
     AVFrame *frame = data;
-    int ret, i, pal_size;
-    const uint8_t *pal = av_packet_get_side_data(avpkt, AV_PKT_DATA_PALETTE, &pal_size);
+    int ret, i;
     int compression;
     unsigned flags;
     uint8_t *dst;
@@ -472,9 +478,10 @@ static int gdv_decode_frame(AVCodecContext *avctx, void *data,
 
     if ((ret = ff_get_buffer(avctx, frame, 0)) < 0)
         return ret;
-    if (pal && pal_size == AVPALETTE_SIZE)
-        memcpy(gdv->pal, pal, AVPALETTE_SIZE);
+    ff_copy_palette(gdv->pal, avpkt, avctx);
 
+    if (compression < 2 && bytestream2_get_bytes_left(gb) < 256*3)
+        return AVERROR_INVALIDDATA;
     rescale(gdv, gdv->frame, avctx->width, avctx->height,
             !!(flags & 0x10), !!(flags & 0x20));
 
@@ -482,8 +489,6 @@ static int gdv_decode_frame(AVCodecContext *avctx, void *data,
     case 1:
         memset(gdv->frame + PREAMBLE_SIZE, 0, gdv->frame_size - PREAMBLE_SIZE);
     case 0:
-        if (bytestream2_get_bytes_left(gb) < 256*3)
-            return AVERROR_INVALIDDATA;
         for (i = 0; i < 256; i++) {
             unsigned r = bytestream2_get_byte(gb);
             unsigned g = bytestream2_get_byte(gb);
@@ -545,7 +550,7 @@ static int gdv_decode_frame(AVCodecContext *avctx, void *data,
 
     *got_frame = 1;
 
-    return ret < 0 ? ret : avpkt->size;
+    return avpkt->size;
 }
 
 static av_cold int gdv_decode_close(AVCodecContext *avctx)
@@ -555,7 +560,7 @@ static av_cold int gdv_decode_close(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec ff_gdv_decoder = {
+const AVCodec ff_gdv_decoder = {
     .name           = "gdv",
     .long_name      = NULL_IF_CONFIG_SMALL("Gremlin Digital Video"),
     .type           = AVMEDIA_TYPE_VIDEO,

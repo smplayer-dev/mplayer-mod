@@ -22,6 +22,8 @@
 
 #include <inttypes.h>
 
+#include "libavutil/mem_internal.h"
+
 #include "avcodec.h"
 #include "bytestream.h"
 #include "internal.h"
@@ -42,9 +44,9 @@ enum AICBands {
     NUM_BANDS
 };
 
-static const int aic_num_band_coeffs[NUM_BANDS] = { 64, 32, 192, 96 };
+static const uint8_t aic_num_band_coeffs[NUM_BANDS] = { 64, 32, 192, 96 };
 
-static const int aic_band_off[NUM_BANDS] = { 0, 64, 96, 288 };
+static const uint16_t aic_band_off[NUM_BANDS] = { 0, 64, 96, 288 };
 
 static const uint8_t aic_quant_matrix[64] = {
      8, 16, 19, 22, 22, 26, 26, 27,
@@ -389,7 +391,6 @@ static int aic_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     uint32_t off;
     int x, y, ret;
     int slice_size;
-    ThreadFrame frame = { .f = data };
 
     ctx->frame            = data;
     ctx->frame->pict_type = AV_PICTURE_TYPE_I;
@@ -408,7 +409,7 @@ static int aic_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
         return ret;
     }
 
-    if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0)
+    if ((ret = ff_thread_get_buffer(avctx, ctx->frame, 0)) < 0)
         return ret;
 
     bytestream2_init(&gb, buf + AIC_HDR_SIZE,
@@ -494,7 +495,7 @@ static av_cold int aic_decode_close(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec ff_aic_decoder = {
+const AVCodec ff_aic_decoder = {
     .name           = "aic",
     .long_name      = NULL_IF_CONFIG_SMALL("Apple Intermediate Codec"),
     .type           = AVMEDIA_TYPE_VIDEO,
@@ -504,6 +505,5 @@ AVCodec ff_aic_decoder = {
     .close          = aic_decode_close,
     .decode         = aic_decode_frame,
     .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_FRAME_THREADS,
-    .init_thread_copy = ONLY_IF_THREADS_ENABLED(aic_decode_init),
     .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

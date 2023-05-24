@@ -27,12 +27,15 @@
 #include "mp_msg.h"
 #include "gui/app/app.h"
 #include "gui/app/gui.h"
+#include "gui/interface.h"
 #include "actions.h"
 #include "ui.h"
 #include "gui/util/mem.h"
 #include "gui/wm/ws.h"
 
 #include "gui/dialog/dialog.h"
+
+#include "libavutil/avstring.h"
 
 unsigned char * menuDrawBuffer = NULL;
 static int      uiMenuRender = True;
@@ -108,14 +111,16 @@ void uiMenuInit( void )
 
  if ( ( menuDrawBuffer = calloc( 1,guiApp.menu.Bitmap.ImageSize ) ) == NULL )
   {
-    mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[menu] " MSGTR_GUI_MSG_MemoryErrorWindow );
-   gtkMessageBox( MSGBOX_FATAL,"[menu] " MSGTR_GUI_MSG_MemoryErrorWindow );
-   return;
+   char msg[80] = "[menu] ";
+
+   av_strlcat( msg, _(MSGTR_GUI_MSG_MemoryErrorWindow), sizeof(msg) );
+   gmp_msg( MSGT_GPLAYER, MSGL_FATAL, msg );
+   mplayer( MPLAYER_EXIT_GUI, EXIT_ERROR, 0 );
   }
 
  wsWindowCreate( &guiApp.menuWindow,
  guiApp.menu.x,guiApp.menu.y,guiApp.menu.width,guiApp.menu.height,
- wsOverredirect|wsHideFrame|wsMaxSize|wsMinSize|wsHideWindow,wsShowMouseCursor|wsHandleMouseButton|wsHandleMouseMove,"MPlayer menu" );
+ wsOverredirect|wsHideFrame|wsMaxSize|wsMinSize|wsHideWindow,wsShowMouseCursor|wsHandleMouseButton|wsHandleMouseMove,MPlayer" - Menu" );
 
  mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[menu] menuWindow ID: 0x%x\n",(int)guiApp.menuWindow.WindowID );
 

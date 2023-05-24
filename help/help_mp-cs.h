@@ -513,6 +513,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "Vyrovnávací paměť"
 #define MSGTR_GUI_CacheSize "Velikost vyrovnávací paměti"
 #define MSGTR_GUI_Cancel "Zrušit"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_Center "Středový"
 #define MSGTR_GUI_Channel1 "Kanál 1"
 #define MSGTR_GUI_Channel2 "Kanál 2"
@@ -529,6 +531,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_CodecFamilyVideo "Rodina video kodeku"
 #define MSGTR_GUI_CodecsAndLibraries "Kodeky a knihovny třetích stran"
 #define MSGTR_GUI_Coefficient "Koeficient"
+#define MSGTR_GUI_ConfigFileError "chyba konfiguračního souboru\n"
 #define MSGTR_GUI_Configure "Konfigurace"
 #define MSGTR_GUI_ConfigureDriver "Konfigurovat ovladač"
 #define MSGTR_GUI_Contrast "Kontrast"
@@ -594,16 +597,17 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Hue "Odstín"
 #define MSGTR_GUI_Lavc "Použít LAVC (FFmpeg)"
 #define MSGTR_GUI_MaximumUsageSpareCPU "Automatické řízení kvality"
+#define MSGTR_GUI_MemAllocFailed MSGTR_MemAllocFailed
 #define MSGTR_GUI_Miscellaneous "Ostatní"
 #define MSGTR_GUI_Mixer "Mixér"
 #define MSGTR_GUI_MixerChannel "Kanál mixéru"
 #define MSGTR_GUI_MSG_AddingVideoFilter "[GUI] Přidávám video filtr: %s\n"
 #define MSGTR_GUI_MSG_ColorDepthTooLow "Promiňte, ale barevná hloubka je příliš malá.\n"
 #define MSGTR_GUI_MSG_DragAndDropNothing "D&D: Nic se nevrátilo!\n"
-#define MSGTR_GUI_MSG_DXR3NeedsLavc "Bohužel nelze přehrávat ne-MPEG s kartou DXR3/H+ bez přeenkódování.\nProsím, zapněte lavc v konfiguraci DXR3/H+."
+#define MSGTR_GUI_MSG_DXR3NeedsLavc "Bohužel nelze přehrávat ne-MPEG s kartou DXR3/H+ bez přeenkódování.\nProsím, zapněte lavc v konfiguraci DXR3/H+.\n"
 #define MSGTR_GUI_MSG_LoadingSubtitle "[GUI] Načítám titulky: %s\n"
 #define MSGTR_GUI_MSG_MemoryErrorImage "Promiňte, nedostatek paměti pro vykreslení bufferu.\n"
-#define MSGTR_GUI_MSG_MemoryErrorWindow "Bohužel není dostatek paměti pro vykreslovací mezipaměť."
+#define MSGTR_GUI_MSG_MemoryErrorWindow "Bohužel není dostatek paměti pro vykreslovací mezipaměť.\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "Není načten žádný soubor."
 #define MSGTR_GUI_MSG_NoMediaOpened "Nic není otevřeno."
 #define MSGTR_GUI_MSG_NotAFile0 "Toto nevypadá jako soubor...\n"
@@ -629,7 +633,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_MSG_SkinUnknownParameter "neznámý parametr (%s)\n"
 #define MSGTR_GUI_MSG_TooManyWindows "Příliš mnoho otevřených oken.\n"
 #define MSGTR_GUI_MSG_UnableToSaveOption "[cfg] Nelze uložit volbu '%s'.\n"
-#define MSGTR_GUI_MSG_VideoOutError "Bohužel nebyl nalezen video ovladač kompatibilní s GUI."
+#define MSGTR_GUI_MSG_VideoOutError "Bohužel nebyl nalezen video ovladač kompatibilní s GUI.\n"
 #define MSGTR_GUI_MSG_XShapeError "Promiňte, ale váš systém nepodporuje rozšíření XShape.\n"
 #define MSGTR_GUI_MSG_XSharedMemoryError "chyba rozšíření shared memory\n"
 #define MSGTR_GUI_MSG_XSharedMemoryUnavailable "Promiňte, ale váš systém nepodporuje rozšíření X shared memory.\n"
@@ -701,6 +705,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Video "Obraz"
 #define MSGTR_GUI_VideoEncoder "Video enkodér"
 #define MSGTR_GUI_VideoTracks "Video stopa"
+#define MSGTR_GUI_Volume MSGTR_Volume
 #define MSGTR_GUI_Warning "Varování!"
 
 // ======================= video output drivers ========================

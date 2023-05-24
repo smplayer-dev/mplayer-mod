@@ -333,10 +333,14 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     uint8_t *outptr;
     int dx, dy, w, h, depth, enc, chunks, res, size_left, ret;
 
-    if ((ret = ff_reget_buffer(avctx, c->pic)) < 0)
-        return ret;
-
     bytestream2_init(gb, buf, buf_size);
+    bytestream2_skip(gb, 2);
+    chunks = bytestream2_get_be16(gb);
+    if (12LL * chunks > bytestream2_get_bytes_left(gb))
+        return AVERROR_INVALIDDATA;
+
+    if ((ret = ff_reget_buffer(avctx, c->pic, 0)) < 0)
+        return ret;
 
     c->pic->key_frame = 0;
     c->pic->pict_type = AV_PICTURE_TYPE_P;
@@ -369,8 +373,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
             }
         }
     }
-    bytestream2_skip(gb, 2);
-    chunks = bytestream2_get_be16(gb);
+
     while (chunks--) {
         if (bytestream2_get_bytes_left(gb) < 12) {
             av_log(avctx, AV_LOG_ERROR, "Premature end of data!\n");
@@ -569,7 +572,7 @@ static av_cold int decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec ff_vmnc_decoder = {
+const AVCodec ff_vmnc_decoder = {
     .name           = "vmnc",
     .long_name      = NULL_IF_CONFIG_SMALL("VMware Screen Codec / VMware Video"),
     .type           = AVMEDIA_TYPE_VIDEO,
@@ -579,4 +582,5 @@ AVCodec ff_vmnc_decoder = {
     .close          = decode_end,
     .decode         = decode_frame,
     .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

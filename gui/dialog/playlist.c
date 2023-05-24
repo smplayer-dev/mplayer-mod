@@ -264,8 +264,7 @@ static gboolean plKeyReleased( GtkWidget * widget,
 {
  if (event->keyval == GDK_Return)
   {
-   if ( GTK_WIDGET_TYPE( widget ) == GTK_TYPE_BUTTON ) plButtonReleased( NULL, user_data );
-   else
+   if ( GTK_WIDGET_TYPE( widget ) == GTK_TYPE_CLIST )
     {
      switch ( GPOINTER_TO_INT( user_data) )
       {
@@ -397,7 +396,7 @@ static void scan_dir( char * path )
  char              * curr;
  struct dirent * dirent;
  struct                  stat statbuf;
- char              * text[1][3]; text[0][2]="";
+ char              * text[1];
 
  gtk_clist_clear( GTK_CLIST( CLFiles ) );
  if ( (dir=opendir( path )) )
@@ -408,10 +407,9 @@ static void scan_dir( char * path )
          curr=calloc( 1,strlen( path ) + strlen( dirent->d_name ) + 3 ); sprintf( curr,"%s/%s",path,dirent->d_name );
          if ( stat( curr,&statbuf ) != -1 && ( S_ISREG( statbuf.st_mode ) || S_ISLNK( statbuf.st_mode ) ) )
           {
-           text[0][0]=g_filename_display_name( dirent->d_name );
-           text[0][1]=dirent->d_name;
-           gtk_clist_append( GTK_CLIST( CLFiles ), text[0] );
-           g_free( text[0][0] );
+           text[0]=g_filename_display_name( dirent->d_name );
+           gtk_clist_append( GTK_CLIST( CLFiles ), text );
+           g_free( text[0] );
            NrOfEntrys++;
           }
          free( curr );
@@ -459,7 +457,7 @@ static GtkWidget * CreatePlaylist( void )
 
   Playlist=gtk_window_new( GTK_WINDOW_TOPLEVEL );
   gtk_widget_set_usize(Playlist, 640, 480);
-  gtk_window_set_title( GTK_WINDOW( Playlist ),MSGTR_GUI_Playlist );
+  gtk_window_set_title( GTK_WINDOW( Playlist ),_(MSGTR_GUI_Playlist) );
   gtk_window_set_position( GTK_WINDOW( Playlist ),GTK_WIN_POS_CENTER );
   gtk_window_set_wmclass( GTK_WINDOW( Playlist ),"Playlist",MPlayer );
 
@@ -504,7 +502,7 @@ static GtkWidget * CreatePlaylist( void )
   else if ( fsHistory[0] ) old_path = strdup( cfg_old_filename_from_utf8( fsHistory[0] ) );
 
   gtk_clist_set_column_widget( GTK_CLIST( CTDirTree ),0,
-    gtkAddLabel( MSGTR_GUI_DirectoryTree,NULL ) );
+    gtkAddLabel( _(MSGTR_GUI_DirectoryTree),NULL ) );
 
   gtk_clist_column_title_passive( GTK_CLIST( CTDirTree ),0 );
 
@@ -516,17 +514,16 @@ static GtkWidget * CreatePlaylist( void )
   gtk_box_pack_start( GTK_BOX( vbox2 ),scrolledwindow2,TRUE,TRUE,0 );
   gtk_scrolled_window_set_policy( GTK_SCROLLED_WINDOW( scrolledwindow2 ),GTK_POLICY_AUTOMATIC,GTK_POLICY_AUTOMATIC );
 
-  CLFiles=gtk_clist_new( 2 );
+  CLFiles=gtk_clist_new( 1 );
   gtk_widget_show( CLFiles );
   gtk_container_add( GTK_CONTAINER( scrolledwindow2 ),CLFiles );
   gtk_clist_set_column_width( GTK_CLIST( CLFiles ),0,80 );
-  gtk_clist_set_column_visibility( GTK_CLIST( CLFiles ),1,FALSE );
-  gtk_clist_set_selection_mode( GTK_CLIST( CLFiles ),GTK_SELECTION_EXTENDED );
+  gtk_clist_set_selection_mode( GTK_CLIST( CLFiles ),GTK_SELECTION_MULTIPLE );
   gtk_clist_column_titles_show( GTK_CLIST( CLFiles ) );
   gtk_clist_set_shadow_type( GTK_CLIST( CLFiles ),GTK_SHADOW_NONE );
 
   gtk_clist_set_column_widget( GTK_CLIST( CLFiles ),0,
-    gtkAddLabel( MSGTR_GUI_Files,NULL ) );
+    gtkAddLabel( _(MSGTR_GUI_Files),NULL ) );
 
   gtk_clist_column_title_passive( GTK_CLIST( CLFiles ),0 );
 
@@ -547,10 +544,10 @@ static GtkWidget * CreatePlaylist( void )
   gtk_clist_set_shadow_type( GTK_CLIST( CLSelected ),GTK_SHADOW_NONE );
 
   gtk_clist_set_column_widget( GTK_CLIST( CLSelected ),0,
-    gtkAddLabel( MSGTR_GUI_SelectedFiles,NULL ) );
+    gtkAddLabel( _(MSGTR_GUI_SelectedFiles),NULL ) );
 
   gtk_clist_set_column_widget( GTK_CLIST( CLSelected ),1,
-    gtkAddLabel( MSGTR_GUI_Directory,NULL ) );
+    gtkAddLabel( _(MSGTR_GUI_Directory),NULL ) );
 
   gtk_clist_column_title_passive( GTK_CLIST( CLSelected ),0 );
 
@@ -560,10 +557,10 @@ static GtkWidget * CreatePlaylist( void )
     gtk_button_box_set_layout( GTK_BUTTON_BOX( hbuttonbox1 ),GTK_BUTTONBOX_END );
     gtk_button_box_set_spacing( GTK_BUTTON_BOX( hbuttonbox1 ),10 );
 
-  Add=gtkAddButton( MSGTR_GUI_Add,hbuttonbox1 );
-  Remove=gtkAddButton( MSGTR_GUI_Remove,hbuttonbox1 );
-  Ok=gtkAddButton( MSGTR_GUI_Ok,hbuttonbox1 );
-  Cancel=gtkAddButton( MSGTR_GUI_Cancel,hbuttonbox1 );
+  Add=gtkAddButton( _(MSGTR_GUI_Add),hbuttonbox1 );
+  Remove=gtkAddButton( _(MSGTR_GUI_Remove),hbuttonbox1 );
+  Ok=gtkAddButton( _(MSGTR_GUI_Ok),hbuttonbox1 );
+  Cancel=gtkAddButton( _(MSGTR_GUI_Cancel),hbuttonbox1 );
 
   gtk_widget_add_accelerator( Cancel,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );
 
@@ -578,14 +575,10 @@ static GtkWidget * CreatePlaylist( void )
   sigEvent=gtk_signal_connect( GTK_OBJECT( CLSelected ),"event",GTK_SIGNAL_FUNC( plEvent ),GINT_TO_POINTER(1) );
   gtk_signal_connect( GTK_OBJECT( CLSelected ),"key-release-event",GTK_SIGNAL_FUNC( plKeyReleased ),GINT_TO_POINTER(1) );
 
-  gtk_signal_connect( GTK_OBJECT( Add ),"released",GTK_SIGNAL_FUNC( plButtonReleased ),GINT_TO_POINTER(3) );
-  gtk_signal_connect( GTK_OBJECT( Add ),"key-release-event",GTK_SIGNAL_FUNC( plKeyReleased ),GINT_TO_POINTER(3) );
-  gtk_signal_connect( GTK_OBJECT( Remove ),"released",GTK_SIGNAL_FUNC( plButtonReleased ),GINT_TO_POINTER(2) );
-  gtk_signal_connect( GTK_OBJECT( Remove ),"key-release-event",GTK_SIGNAL_FUNC( plKeyReleased ),GINT_TO_POINTER(2) );
-  gtk_signal_connect( GTK_OBJECT( Ok ),"released",GTK_SIGNAL_FUNC( plButtonReleased ),GINT_TO_POINTER(1) );
-  gtk_signal_connect( GTK_OBJECT( Ok ),"key-release-event",GTK_SIGNAL_FUNC( plKeyReleased ),GINT_TO_POINTER(1) );
-  gtk_signal_connect( GTK_OBJECT( Cancel ),"released",GTK_SIGNAL_FUNC( plButtonReleased ),GINT_TO_POINTER(0) );
-  gtk_signal_connect( GTK_OBJECT( Cancel ),"key-release-event",GTK_SIGNAL_FUNC( plKeyReleased ),GINT_TO_POINTER(0) );
+  gtk_signal_connect( GTK_OBJECT( Add ),"clicked",GTK_SIGNAL_FUNC( plButtonReleased ),GINT_TO_POINTER(3) );
+  gtk_signal_connect( GTK_OBJECT( Remove ),"clicked",GTK_SIGNAL_FUNC( plButtonReleased ),GINT_TO_POINTER(2) );
+  gtk_signal_connect( GTK_OBJECT( Ok ),"clicked",GTK_SIGNAL_FUNC( plButtonReleased ),GINT_TO_POINTER(1) );
+  gtk_signal_connect( GTK_OBJECT( Cancel ),"clicked",GTK_SIGNAL_FUNC( plButtonReleased ),GINT_TO_POINTER(0) );
 
   gtk_window_add_accel_group( GTK_WINDOW( Playlist ),accel_group );
 

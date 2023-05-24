@@ -17,7 +17,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  *
- * $Id: pnm.c 37641 2016-02-09 21:13:26Z reimar $
+ * $Id: pnm.c 38242 2021-01-25 19:10:32Z reimar $
  *
  * pnm protocol implementation
  * based upon code from joschka
@@ -33,10 +33,10 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <stdlib.h>
-#include <sys/time.h>
 #include <inttypes.h>
 #if !HAVE_WINSOCK2_H
 #include <sys/socket.h>
+#include <sys/time.h>
 //#include <netinet/in.h>
 //#include <netdb.h>
 #else

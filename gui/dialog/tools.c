@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "tools.h"
+#include "gui/app/gui.h"
 
 #include "help_mp.h"
 
@@ -37,7 +38,7 @@
  */
 static gchar *scale_format_value (GtkScale *scale, gdouble value, gpointer user_data)
 {
-  gchar *val, *p, *dm = MSGTR_GUI_DecimalMark;
+  gchar *val, *p, *dm = _(MSGTR_GUI_DecimalMark);
 
   (void) user_data;
 
@@ -86,6 +87,18 @@ GtkWidget * gtkAddLabel( const char * title,GtkWidget * parent )
  if ( parent ) gtk_box_pack_start( GTK_BOX( parent ),label,FALSE,FALSE,0 );
  gtk_misc_set_alignment( GTK_MISC( label ),0,0.5 );
  gtk_misc_set_padding( GTK_MISC( label ),4,0 );
+ return label;
+}
+
+GtkWidget * gtkAddLabelColon( const char * title,GtkWidget * parent )
+{
+ GtkWidget * label;
+ gchar * text;
+
+ text = g_strconcat( title,":",NULL );
+ label = gtkAddLabel( text,parent );
+ g_free( text );
+
  return label;
 }
 
@@ -146,6 +159,18 @@ GtkWidget * gtkAddSpinButton( const char * title,GtkAdjustment * adj,GtkWidget *
  gtk_box_pack_start( GTK_BOX( parent ),SB,FALSE,FALSE,0 );
  gtk_widget_show( SB );
  return SB;
+}
+
+GtkWidget * gtkAddSpinButtonColon( const char * title,GtkAdjustment * adj,GtkWidget * parent )
+{
+ GtkWidget * button;
+ gchar * text;
+
+ text = g_strconcat( title,":",NULL );
+ button = gtkAddSpinButton( text,adj,parent );
+ g_free( text );
+
+ return button;
 }
 
 GtkWidget * gtkAddButton( const char * title,GtkWidget * parent )

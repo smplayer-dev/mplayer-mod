@@ -20,9 +20,11 @@
 
 #define BITSTREAM_WRITER_LE
 
+#include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/opt.h"
 #include "avcodec.h"
+#include "encode.h"
 #include "internal.h"
 #include "put_bits.h"
 #include "bytestream.h"
@@ -529,9 +531,9 @@ static int8_t store_weight(int weight)
 
 static int restore_weight(int8_t weight)
 {
-    int result;
+    int result = 8 * weight;
 
-    if ((result = (int) weight << 3) > 0)
+    if (result > 0)
         result += (result + 64) >> 7;
 
     return result;
@@ -637,22 +639,16 @@ static void reverse_mono_decorr(struct Decorr *dpp)
     }
 }
 
+#define count_bits(av) ((av) ? 32 - ff_clz(av) : 0)
+
 static uint32_t log2sample(uint32_t v, int limit, uint32_t *result)
 {
-    uint32_t dbits;
+    uint32_t dbits = count_bits(v);
 
     if ((v += v >> 9) < (1 << 8)) {
-        dbits = nbits_table[v];
-        *result += (dbits << 8) + wp_log2_table[(v << (9 - dbits)) & 0xff];
+        *result += (dbits << 8) + ff_wp_log2_table[(v << (9 - dbits)) & 0xff];
     } else {
-        if (v < (1 << 16))
-            dbits = nbits_table[v >> 8] + 8;
-        else if (v < (1 << 24))
-            dbits = nbits_table[v >> 16] + 16;
-        else
-            dbits = nbits_table[v >> 24] + 24;
-
-        *result += dbits = (dbits << 8) + wp_log2_table[(v >> (dbits - 9)) & 0xff];
+        *result += dbits = (dbits << 8) + ff_wp_log2_table[(v >> (dbits - 9)) & 0xff];
 
         if (limit && dbits >= limit)
             return 1;
@@ -1969,14 +1965,6 @@ static int wv_stereo(WavPackEncodeContext *s,
     return 0;
 }
 
-#define count_bits(av) ( \
- (av) < (1 << 8) ? nbits_table[av] : \
-  ( \
-   (av) < (1 << 16) ? nbits_table[(av) >> 8] + 8 : \
-   ((av) < (1 << 24) ? nbits_table[(av) >> 16] + 16 : nbits_table[(av) >> 24] + 24) \
-  ) \
-)
-
 static void encode_flush(WavPackEncodeContext *s)
 {
     WavPackWords *w = &s->w;
@@ -2571,7 +2559,7 @@ static int wavpack_encode_block(WavPackEncodeContext *s,
             ret = wv_mono(s, samples_l, !s->num_terms, 1);
     } else {
         for (i = 0; i < nb_samples; i++)
-            crc += (crc << 3) + (samples_l[i] << 1) + samples_l[i] + samples_r[i];
+            crc += (crc << 3) + ((uint32_t)samples_l[i] << 1) + samples_l[i] + samples_r[i];
 
         if (s->num_passes)
             ret = wv_stereo(s, samples_l, samples_r, !s->num_terms, 1);
@@ -2791,7 +2779,7 @@ static int wavpack_encode_block(WavPackEncodeContext *s,
     }
     encode_flush(s);
     flush_put_bits(&s->pb);
-    data_size = put_bits_count(&s->pb) >> 3;
+    data_size = put_bytes_output(&s->pb);
     bytestream2_put_le24(&pb, (data_size + 1) >> 1);
     bytestream2_skip_p(&pb, data_size);
     if (data_size & 1)
@@ -2805,7 +2793,7 @@ static int wavpack_encode_block(WavPackEncodeContext *s,
         else
             pack_int32(s, s->orig_l, s->orig_r, nb_samples);
         flush_put_bits(&s->pb);
-        data_size = put_bits_count(&s->pb) >> 3;
+        data_size = put_bytes_output(&s->pb);
         bytestream2_put_le24(&pb, (data_size + 5) >> 1);
         bytestream2_put_le32(&pb, s->crc_x);
         bytestream2_skip_p(&pb, data_size);
@@ -2883,7 +2871,7 @@ static int wavpack_encode_frame(AVCodecContext *avctx, AVPacket *avpkt,
 
     buf_size = s->block_samples * avctx->channels * 8
              + 200 * avctx->channels /* for headers */;
-    if ((ret = ff_alloc_packet2(avctx, avpkt, buf_size, 0)) < 0)
+    if ((ret = ff_alloc_packet(avctx, avpkt, buf_size)) < 0)
         return ret;
     buf = avpkt->data;
 
@@ -2971,7 +2959,7 @@ static const AVClass wavpack_encoder_class = {
     .version    = LIBAVUTIL_VERSION_INT,
 };
 
-AVCodec ff_wavpack_encoder = {
+const AVCodec ff_wavpack_encoder = {
     .name           = "wavpack",
     .long_name      = NULL_IF_CONFIG_SMALL("WavPack"),
     .type           = AVMEDIA_TYPE_AUDIO,
@@ -2987,4 +2975,5 @@ AVCodec ff_wavpack_encoder = {
                                                      AV_SAMPLE_FMT_S32P,
                                                      AV_SAMPLE_FMT_FLTP,
                                                      AV_SAMPLE_FMT_NONE },
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

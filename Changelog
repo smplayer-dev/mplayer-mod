@@ -1,5 +1,37 @@
 MPlayer
 
+  1.5: "Hope" February 27, 2022
+
+    Decoders, demuxers, streams:
+    * ffmpeg12vpdau is no longer supported by FFmpeg,
+      provide separate ffmpeg1vpdau and ffmpeg2vdpau instead
+    * live555 deprecated and disabled by default, will be removed
+      in future
+
+    GUI:
+    * Fix wrongly sized video window after leaving fullscreen mode
+    * Clear screen when switching to fullscreen mode using the x11
+      video output driver
+    * Command line option -fs is now recognized in addition to the
+      GUI option load_fullscreen
+    * Use correct visual in OpenGL video output driver for X11
+    * Provide a built-in skin so that the GUI can be used even
+      without an installed skin
+    * Native Language Support, i.e. the GUI language can be changed
+      as specified in LC_MESSAGES or LANG
+    * Minor bug fixes
+
+    Other:
+    * Building on Arm now compiles for the ISA and extensions of the
+      host CPU by default. This should avoid issues like builds on
+      e.g. Raspbian not using NEON by default.
+      Can use --enable-runtime-cpudetection to restore the previous
+      behaviour, though full runtime CPU detection is not supported.
+    * New configure option --enable-nls for Native Language Support at
+      runtime (for the moment only for the GUI and enabled by default
+      for it)
+    * macOS: Fixes for retina display, sluggish input processing
+
   1.4: "SubCounter" April 18, 2019
 
     Decoders, demuxers, streams:

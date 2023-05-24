@@ -33,7 +33,6 @@
  */
 
 #include <stdio.h>
-#include <strings.h>
 #include <vdpau/vdpau_x11.h>
 
 #include "config.h"
@@ -54,6 +53,7 @@
 #include "libavcodec/vdpau.h"
 
 #include "libavutil/common.h"
+#include "libavutil/avstring.h"
 #include "libavutil/mathematics.h"
 
 
@@ -824,6 +824,38 @@ static void check_events(void)
     }
 }
 
+#if HAVE_EMMINTRIN_H
+#include <emmintrin.h>
+
+#include "cpudetect.h"
+
+ATTR_TARGET_SSE2
+static void copyosd_SSE2(int w, int h, unsigned char *src, unsigned char *srca, int stride)
+{
+    unsigned char *dst = index_data;
+    __m128i zero = _mm_setzero_si128();
+    while (h--) {
+        int i;
+        for (i = 0; i < w - 15; i += 16)
+        {
+            __m128i mmsrc = _mm_loadu_si128((const __m128i *)(src + i));
+            __m128i mmsrca = _mm_loadu_si128((const __m128i *)(srca + i));
+            mmsrca = _mm_sub_epi8(zero, mmsrca);
+            _mm_storeu_si128((__m128i *)(dst + 0), _mm_unpacklo_epi8(mmsrc, mmsrca));
+            _mm_storeu_si128((__m128i *)(dst + 16), _mm_unpackhi_epi8(mmsrc, mmsrca));
+            dst += 32;
+        }
+        for (; i < w; i++)
+        {
+            *dst++ = src  [i];
+            *dst++ = -srca[i];
+        }
+        src += stride;
+        srca += stride;
+    }
+}
+#endif
+
 static void draw_osd_I8A8(int x0,int y0, int w,int h, unsigned char *src,
                           unsigned char *srca, int stride)
 {
@@ -845,11 +877,18 @@ static void draw_osd_I8A8(int x0,int y0, int w,int h, unsigned char *src,
     }
 
     // index_data creation, component order - I, A, I, A, .....
-    for (i = 0; i < h; i++)
-        for (j = 0; j < w; j++) {
-            index_data[i*2*w + j*2]     =  src [i*stride + j];
-            index_data[i*2*w + j*2 + 1] = -srca[i*stride + j];
-        }
+#if HAVE_EMMINTRIN_H
+    if (gCpuCaps.hasSSE2) copyosd_SSE2(w, h, src, srca, stride);
+    else
+#endif
+    {
+        unsigned char *dst = index_data;
+        for (i = 0; i < h; i++)
+            for (j = 0; j < w; j++) {
+                *dst++ = src [i*stride + j];
+                *dst++ = -srca[i*stride + j];
+            }
+    }
 
     output_indexed_rect_vid.x0 = x0;
     output_indexed_rect_vid.y0 = y0;
@@ -1347,13 +1386,13 @@ static int preinit(const char *arg)
 
 static int get_equalizer(const char *name, int *value)
 {
-    if (!strcasecmp(name, "brightness"))
+    if (!av_strcasecmp(name, "brightness"))
         *value = procamp.brightness * 100;
-    else if (!strcasecmp(name, "contrast"))
+    else if (!av_strcasecmp(name, "contrast"))
         *value = (procamp.contrast-1.0) * 100;
-    else if (!strcasecmp(name, "saturation"))
+    else if (!av_strcasecmp(name, "saturation"))
         *value = (procamp.saturation-1.0) * 100;
-    else if (!strcasecmp(name, "hue"))
+    else if (!av_strcasecmp(name, "hue"))
         *value = procamp.hue * 100 / M_PI;
     else
         return VO_NOTIMPL;
@@ -1362,13 +1401,13 @@ static int get_equalizer(const char *name, int *value)
 
 static int set_equalizer(const char *name, int value)
 {
-    if (!strcasecmp(name, "brightness"))
+    if (!av_strcasecmp(name, "brightness"))
         procamp.brightness = value / 100.0;
-    else if (!strcasecmp(name, "contrast"))
+    else if (!av_strcasecmp(name, "contrast"))
         procamp.contrast = value / 100.0 + 1.0;
-    else if (!strcasecmp(name, "saturation"))
+    else if (!av_strcasecmp(name, "saturation"))
         procamp.saturation = value / 100.0 + 1.0;
-    else if (!strcasecmp(name, "hue"))
+    else if (!av_strcasecmp(name, "hue"))
         procamp.hue = value / 100.0 * M_PI;
     else
         return VO_NOTIMPL;

@@ -75,8 +75,8 @@
 #include "config.h"
 
 #include <stdio.h>
-#include <strings.h>
 
+#include "libavutil/avstring.h"
 #include "libmpcodecs/img_format.h"
 #include "libmpcodecs/dec_teletext.h"
 #include "libaf/af_format.h"
@@ -86,6 +86,7 @@
 
 #include "tv.h"
 #include "mp_msg.h"
+#include "mppacked.h"
 #include "frequencies.h"
 
 
@@ -221,12 +222,14 @@ typedef struct priv {
  \note
  structure have to be 2-byte aligned and have 10-byte length!!
 */
-typedef struct __attribute__((__packed__)) {
+MP_PACKED(
+typedef struct, {
     WORD CountryCode;		///< Country code
     WORD CableFreqTable;	///< index of resource with frequencies for cable channels
     WORD BroadcastFreqTable;	///< index of resource with frequencies for broadcast channels
     DWORD VideoStandard;	///< used video standard
 } TRCCountryList;
+)
 /**
     information about image formats
 */
@@ -3463,7 +3466,7 @@ static int control(priv_t * priv, int cmd, void *arg)
 	    if (!priv->pTVTuner)
 		return TVI_CONTROL_FALSE;
 	    for (i = 0; i < tv_available_norms_count; i++) {
-		if (!strcasecmp
+		if (!av_strcasecmp
 		    (tv_norms[tv_available_norms[i]].name, (char *) arg)) {
 		    *(int *) arg = i + 1;
 		    return TVI_CONTROL_TRUE;

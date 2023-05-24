@@ -28,7 +28,6 @@
 #include <sys/wait.h>
 #endif
 #include <fcntl.h>
-#include <strings.h>
 #include <assert.h>
 
 #include "config.h"
@@ -37,6 +36,7 @@
 #include <winsock2.h>
 #endif
 
+#include "libavutil/avstring.h"
 #include "mp_msg.h"
 #include "help_mp.h"
 #include "osdep/shmem.h"
@@ -181,7 +181,7 @@ static stream_t* open_stream_plugin(const stream_info_t* sinfo, const char* file
     }
   }
   s = new_stream(-2,-2);
-  s->capture_file = NULL;
+  s->capture_stream = NULL;
   s->url=strdup(filename);
   s->flags |= mode;
   *ret = sinfo->open(s,mode,arg,file_format);
@@ -227,7 +227,7 @@ stream_t* open_stream_full(const char* filename,int mode, char** options, int* f
       int l = strlen(sinfo->protocols[j]);
       // l == 0 => Don't do protocol matching (ie network and filenames)
       if((l == 0 && !strstr(filename, "://")) ||
-         ((strncasecmp(sinfo->protocols[j],filename,l) == 0) &&
+         ((av_strncasecmp(sinfo->protocols[j],filename,l) == 0) &&
 		      (strncmp("://",filename+l,3) == 0))) {
 	int r;
 	char *redirected_url = NULL;
@@ -270,11 +270,11 @@ stream_t* open_output_stream(const char* filename, char** options) {
 
 void stream_capture_do(stream_t *s)
 {
-  if (fwrite(s->buffer, s->buf_len, 1, s->capture_file) < 1) {
+  if (stream_write_buffer(s->capture_stream, s->buffer, s->buf_len) != s->buf_len) {
     mp_msg(MSGT_GLOBAL, MSGL_ERR, MSGTR_StreamErrorWritingCapture,
            strerror(errno));
-    fclose(s->capture_file);
-    s->capture_file = NULL;
+    free_stream(s->capture_stream);
+    s->capture_stream = NULL;
   }
 }
 
@@ -370,7 +370,7 @@ int stream_fill_buffer(stream_t *s){
   // definitely not at EOF yet
   s->eof = 0;
 //  printf("[%d]",len);fflush(stdout);
-  if (s->capture_file)
+  if (s->capture_stream)
     stream_capture_do(s);
   return s->buf_len;
 }
@@ -540,14 +540,15 @@ stream_t* new_stream(int fd,int type){
   return s;
 }
 
-void free_stream(stream_t *s){
+int free_stream(stream_t *s){
+  int res = 0;
 //  printf("\n*** free_stream() called ***\n");
 #ifdef CONFIG_STREAM_CACHE
     cache_uninit(s);
 #endif
-  if (s->capture_file) {
-    fclose(s->capture_file);
-    s->capture_file = NULL;
+  if (s->capture_stream) {
+    res |= free_stream(s->capture_stream);
+    s->capture_stream = NULL;
   }
 
   if(s->close) s->close(s);
@@ -557,7 +558,7 @@ void free_stream(stream_t *s){
        network socket and file */
     if(s->url && strstr(s->url,"://"))
       closesocket(s->fd);
-    else close(s->fd);
+    else res |= close(s->fd);
   }
 #if HAVE_WINSOCK2_H
   mp_msg(MSGT_STREAM,MSGL_V,"WINSOCK2 uninit\n");
@@ -568,6 +569,7 @@ void free_stream(stream_t *s){
   //free(s->priv);
   free(s->url);
   free(s);
+  return res;
 }
 
 stream_t* new_ds_stream(demux_stream_t *ds) {
@@ -747,7 +749,7 @@ int parse_chapter_range(const m_option_t *conf, const char *range) {
   return 0;
 }
 
-#if defined(__MINGW32__) || defined(__CYGWIN__)
+#ifdef __MINGW32__
 wchar_t *utf8_to_wide_char(const char *utf8)
 {
     int conv_size;

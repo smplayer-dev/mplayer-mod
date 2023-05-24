@@ -46,7 +46,7 @@ const char *swresample_configuration(void)
 const char *swresample_license(void)
 {
 #define LICENSE_PREFIX "libswresample license: "
-    return LICENSE_PREFIX FFMPEG_LICENSE + sizeof(LICENSE_PREFIX) - 1;
+    return &LICENSE_PREFIX FFMPEG_LICENSE[sizeof(LICENSE_PREFIX) - 1];
 }
 
 int swr_set_channel_mapping(struct SwrContext *s, const int *channel_map){
@@ -164,6 +164,14 @@ av_cold int swr_init(struct SwrContext *s){
         return AVERROR(EINVAL);
     }
 
+    if(s-> in_sample_rate <= 0){
+        av_log(s, AV_LOG_ERROR, "Requested input sample rate %d is invalid\n", s->in_sample_rate);
+        return AVERROR(EINVAL);
+    }
+    if(s->out_sample_rate <= 0){
+        av_log(s, AV_LOG_ERROR, "Requested output sample rate %d is invalid\n", s->out_sample_rate);
+        return AVERROR(EINVAL);
+    }
     s->out.ch_count  = s-> user_out_ch_count;
     s-> in.ch_count  = s->  user_in_ch_count;
     s->used_ch_count = s->user_used_ch_count;
@@ -407,7 +415,7 @@ int swri_realloc_audio(AudioData *a, int count){
     av_assert0(a->bps);
     av_assert0(a->ch_count);
 
-    a->data= av_mallocz_array(countb, a->ch_count);
+    a->data = av_calloc(countb, a->ch_count);
     if(!a->data)
         return AVERROR(ENOMEM);
     for(i=0; i<a->ch_count; i++){
@@ -635,14 +643,16 @@ static int swr_convert_internal(struct SwrContext *s, AudioData *out, int out_co
 
     if(s->resample_first){
         if(postin != midbuf)
-            out_count= resample(s, midbuf, out_count, postin, in_count);
+            if ((out_count = resample(s, midbuf, out_count, postin, in_count)) < 0)
+                return out_count;
         if(midbuf != preout)
             swri_rematrix(s, preout, midbuf, out_count, preout==out);
     }else{
         if(postin != midbuf)
             swri_rematrix(s, midbuf, postin, in_count, midbuf==out);
         if(midbuf != preout)
-            out_count= resample(s, preout, out_count, midbuf, in_count);
+            if ((out_count = resample(s, preout, out_count, midbuf, in_count)) < 0)
+                return out_count;
     }
 
     if(preout != out && out_count){
@@ -703,8 +713,10 @@ int swr_is_initialized(struct SwrContext *s) {
     return !!s->in_buffer.ch_count;
 }
 
-int attribute_align_arg swr_convert(struct SwrContext *s, uint8_t *out_arg[SWR_CH_MAX], int out_count,
-                                                    const uint8_t *in_arg [SWR_CH_MAX], int  in_count){
+int attribute_align_arg swr_convert(struct SwrContext *s,
+                                          uint8_t **out_arg, int out_count,
+                                    const uint8_t **in_arg,  int in_count)
+{
     AudioData * in= &s->in;
     AudioData *out= &s->out;
     int av_unused max_output;
@@ -759,7 +771,7 @@ int attribute_align_arg swr_convert(struct SwrContext *s, uint8_t *out_arg[SWR_C
         if(ret>0 && !s->drop_output)
             s->outpts += ret * (int64_t)s->in_sample_rate;
 
-        av_assert2(max_output < 0 || ret < 0 || ret <= max_output);
+        av_assert2(max_output < 0 || ret <= max_output);
 
         return ret;
     }else{

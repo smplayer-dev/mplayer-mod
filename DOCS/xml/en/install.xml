@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- $Revision: 33717 $ -->
+<!-- $Revision: 38276 $ -->
 <chapter id="install">
 <title>Installation</title>
 
@@ -193,8 +193,8 @@ execute the <command>gmplayer</command> binary.
 </para>
 
 <para>
-As <application>MPlayer</application> doesn't have a skin included, you
-have to download at least one if you want to use the GUI. See Skins at the <ulink
+In order to use the GUI in a comfortable way and as intended, you are
+strongly advised to install a skin. See Skins at the <ulink
 url="http://www.mplayerhq.hu/dload.html">download page</ulink>.
 A skin should be extracted to the usual system-wide directory <filename
 class="directory">$PREFIX/share/mplayer/skins</filename> or to the user
@@ -205,7 +205,8 @@ directory, then the system-wide directory for a subdirectory named
 <filename class="directory">default</filename> (which
 simply can be a link to your favourite skin) to load the skin, but
 you can use the <option>-skin <replaceable>myskin</replaceable></option>
-option, or the <literal>skin=myskin</literal> config file directive to use
+option, or the <literal>skin=myskin</literal> or <literal>gui_skin=myskin
+</literal> config file directives, or the skin browser to use
 a different skin from the <filename class="directory">skins</filename>
 directories.
 </para>

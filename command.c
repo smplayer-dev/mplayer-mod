@@ -22,7 +22,6 @@
 #include <inttypes.h>
 #include <unistd.h>
 #include <string.h>
-#include <strings.h>
 
 #include "config.h"
 #include "command.h"
@@ -1123,7 +1122,7 @@ static int mp_property_capture(m_option_t *prop, int action,
                                void *arg, MPContext *mpctx)
 {
     int ret;
-    int capturing = mpctx->stream && mpctx->stream->capture_file;
+    int capturing = mpctx->stream && mpctx->stream->capture_stream;
 
     if (!mpctx->stream)
         return M_PROPERTY_UNAVAILABLE;
@@ -1134,17 +1133,18 @@ static int mp_property_capture(m_option_t *prop, int action,
     }
 
     ret = m_property_flag(prop, action, arg, &capturing);
-    if (ret == M_PROPERTY_OK && capturing != !!mpctx->stream->capture_file) {
+    if (ret == M_PROPERTY_OK && capturing != !!mpctx->stream->capture_stream) {
         if (capturing) {
-            mpctx->stream->capture_file = fopen(stream_dump_name, "ab");
-            if (!mpctx->stream->capture_file) {
+            int dummy;
+            mpctx->stream->capture_stream = open_stream_full(stream_dump_name, STREAM_APPEND, NULL, &dummy);
+            if (!mpctx->stream->capture_stream) {
                 mp_msg(MSGT_GLOBAL, MSGL_ERR,
                        "Error opening capture file: %s\n", strerror(errno));
                 ret = M_PROPERTY_ERROR;
             }
         } else {
-            fclose(mpctx->stream->capture_file);
-            mpctx->stream->capture_file = NULL;
+            free_stream(mpctx->stream->capture_stream);
+            mpctx->stream->capture_stream = NULL;
         }
     }
 
@@ -1154,7 +1154,7 @@ static int mp_property_capture(m_option_t *prop, int action,
         break;
     case M_PROPERTY_OK:
         set_osd_msg(OSD_MSG_SPEED, 1, osd_duration, MSGTR_OSDCapturing,
-                    mpctx->stream->capture_file ? MSGTR_Enabled : MSGTR_Disabled);
+                    mpctx->stream->capture_stream ? MSGTR_Enabled : MSGTR_Disabled);
         break;
     default:
         break;
@@ -1315,10 +1315,10 @@ static int mp_property_gamma(m_option_t *prop, int action, void *arg,
 
 #ifdef CONFIG_TV
     if (mpctx->demuxer->type == DEMUXER_TYPE_TV) {
-        int l = strlen(prop->name);
-        char tv_prop[3 + l + 1];
-        sprintf(tv_prop, "tv_%s", prop->name);
-        return mp_property_do(tv_prop, action, arg, mpctx);
+        char *tv_prop = av_asprintf("tv_%s", prop->name);
+        r = mp_property_do(tv_prop, action, arg, mpctx);
+        av_freep(&tv_prop);
+        return r;
     }
 #endif
 
@@ -3423,7 +3423,7 @@ int run_command(MPContext *mpctx, mp_cmd_t *cmd)
 
                 for (i = 0; mp_dvdnav_bindings[i].name; i++)
                   if (cmd->args[0].v.s &&
-                      !strcasecmp (cmd->args[0].v.s,
+                      !av_strcasecmp (cmd->args[0].v.s,
                                    mp_dvdnav_bindings[i].name))
                     command = mp_dvdnav_bindings[i].cmd;
 

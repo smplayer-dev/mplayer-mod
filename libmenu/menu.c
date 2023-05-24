@@ -23,7 +23,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 #include <fcntl.h>
 #include <unistd.h>
 
@@ -37,6 +36,8 @@
 
 #include "libmpcodecs/img_format.h"
 #include "libmpcodecs/mp_image.h"
+#include "libavutil/avstring.h"
+#include "libavutil/mem.h"
 #include "m_option.h"
 #include "m_struct.h"
 #include "menu.h"
@@ -99,7 +100,7 @@ static menu_cmd_bindings_t *get_cmd_bindings(const char *name)
 {
   int i;
   for (i = 0; i < cmd_bindings_num; ++i)
-    if (!strcasecmp(cmd_bindings[i].name, name))
+    if (!av_strcasecmp(cmd_bindings[i].name, name))
       return &cmd_bindings[i];
   return NULL;
 }
@@ -130,7 +131,7 @@ static int menu_parse_config(char* buffer) {
       continue;
     }
 
-    if (!strcasecmp(element, "keybindings")) {
+    if (!av_strcasecmp(element, "keybindings")) {
       menu_cmd_bindings_t *bindings = cmd_bindings;
       char *parent_bindings;
       cmd_bindings = realloc(cmd_bindings,
@@ -163,7 +164,7 @@ static int menu_parse_config(char* buffer) {
           }
           if(r == 0)
             break;
-          if (!strcasecmp(element, "binding")) {
+          if (!av_strcasecmp(element, "binding")) {
             key = asx_get_attrib("key",attribs);
             cmd = asx_get_attrib("cmd",attribs);
             if (key && (keycode = mp_input_get_key_from_name(key)) >= 0) {
@@ -192,7 +193,7 @@ static int menu_parse_config(char* buffer) {
     }
     // Try to find this menu type in our list
     for(i = 0, minfo = NULL ; menu_info_list[i] ; i++) {
-      if(strcasecmp(element,menu_info_list[i]->name) == 0) {
+      if(av_strcasecmp(element,menu_info_list[i]->name) == 0) {
 	minfo = menu_info_list[i];
 	break;
       }
@@ -206,7 +207,7 @@ static int menu_parse_config(char* buffer) {
       menu_list[menu_count].args = body;
       // Setup the attribs
       for(i = 0 ; attribs[2*i] ; i++) {
-	if(strcasecmp(attribs[2*i],"name") == 0) continue;
+	if(av_strcasecmp(attribs[2*i],"name") == 0) continue;
 	if(!m_struct_set(&minfo->priv_st,menu_list[menu_count].cfg,attribs[2*i], attribs[2*i+1]))
 	  mp_msg(MSGT_GLOBAL,MSGL_WARN,MSGTR_LIBMENU_BadAttrib,attribs[2*i],attribs[2*i+1],
 		 name,parser->line);
@@ -745,13 +746,15 @@ void menu_draw_box(mp_image_t* mpi,unsigned char grey,unsigned char alpha, int x
   if(g < 1) g = 1;
 
   {
-    int stride = (w+7)&(~7); // round to 8
-    char pic[stride*h],pic_alpha[stride*h];
-    memset(pic,g,stride*h);
-    memset(pic_alpha,alpha,stride*h);
-    draw_alpha(w,h,pic,pic_alpha,stride,
+    int stride = (w+15)&(~15); // round to 16
+    char *pic = av_malloc(2*stride);
+    char *pic_alpha = pic + stride;
+    memset(pic,g,stride);
+    memset(pic_alpha,alpha,stride);
+    draw_alpha(w,h,pic,pic_alpha,0,
                mpi->planes[0] + y * mpi->stride[0] + x * (mpi->bpp>>3),
                mpi->stride[0]);
+    av_freep(&pic);
   }
 
 }

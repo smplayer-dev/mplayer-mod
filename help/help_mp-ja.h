@@ -271,6 +271,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "キャッシュ"
 #define MSGTR_GUI_CacheSize "キャッシュサイズ"
 #define MSGTR_GUI_Cancel "キャンセル"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_Center "中央"
 #define MSGTR_GUI_Channel1 "チャンネル 1"
 #define MSGTR_GUI_Channel2 "チャンネル 2"
@@ -315,7 +317,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_FrontRight "前方 右"
 #define MSGTR_GUI_Lavc "LAVC (FFmpeg)使用"
 #define MSGTR_GUI_Miscellaneous "Misc"
-#define MSGTR_GUI_MSG_MemoryErrorWindow "描画に必要なバッファを確保するためのメモリが足りません."
+#define MSGTR_GUI_MSG_MemoryErrorWindow "描画に必要なバッファを確保するためのメモリが足りません.\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "ファイルが読み込まれていません."
 #define MSGTR_GUI_MSG_NoMediaOpened "メディアが開かれていません."
 #define MSGTR_GUI_MSG_SkinBitmapConversionError "24bitから32bitへの変換エラー (%s)\n"

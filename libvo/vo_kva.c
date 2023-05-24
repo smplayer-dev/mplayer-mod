@@ -608,7 +608,9 @@ static int preinit(const char *arg)
         {NULL,              0, NULL,      NULL}
     };
 
-    PCSZ pcszVideoModeStr[3] = {"DIVE", "WarpOverlay!", "SNAP", "VMAN"};
+    PCSZ pcszVideoModeStr[] = {"UNKNOWN", "DIVE", "WarpOverlay!", "SNAP",
+                               "VMAN"};
+    int nVideoModeStr = sizeof(pcszVideoModeStr) / sizeof(*pcszVideoModeStr);
 
     if (subopt_parse(arg, subopts) != 0)
         return -1;
@@ -688,7 +690,8 @@ static int preinit(const char *arg)
     kvaCaps(&m_int.kvac);
 
     mp_msg(MSGT_VO, MSGL_V, "KVA: Selected video mode = %s\n",
-           pcszVideoModeStr[m_int.kvac.ulMode - 1]);
+           pcszVideoModeStr[m_int.kvac.ulMode >= nVideoModeStr ?
+                                0 : m_int.kvac.ulMode]);
 
     kvaDisableScreenSaver();
 
@@ -809,12 +812,21 @@ static int config(uint32_t width, uint32_t height,
             d_height++;
         }
 
-        m_int.rclDst.xLeft   = ((LONG)vo_screenwidth  - (LONG)d_width)  / 2;
-        m_int.rclDst.yBottom = ((LONG)vo_screenheight - (LONG)d_height) / 2;
+        vo_dx = (vo_screenwidth - d_width) / 2;
+        vo_dy = (vo_screenheight - d_height ) / 2;
+        geometry(&vo_dx, &vo_dy, &d_width, &d_height,
+                 vo_screenwidth, vo_screenheight);
+
+        m_int.rclDst.xLeft   = vo_dx;
+        // invert Y
+        m_int.rclDst.yBottom = vo_screenheight - (vo_dy + d_height);
         m_int.rclDst.xRight  = m_int.rclDst.xLeft   + d_width;
         m_int.rclDst.yTop    = m_int.rclDst.yBottom + d_height;
 
         if (vo_fs) {
+            vo_dx = 0;
+            vo_dy = 0;
+
             d_width  = vo_screenwidth;
             d_height = vo_screenheight;
 
@@ -828,10 +840,11 @@ static int config(uint32_t width, uint32_t height,
             setAspectRatio(KVAR_FORCEANY);
         }
 
-        rcl.xLeft   = ((LONG)vo_screenwidth  - (LONG)d_width) / 2;
-        rcl.yBottom = ((LONG)vo_screenheight - (LONG)d_height) /2 ;
-        rcl.xRight  = rcl.xLeft              + d_width;
-        rcl.yTop    = rcl.yBottom            + d_height;
+        rcl.xLeft   = vo_dx;
+        // invert Y
+        rcl.yBottom = vo_screenheight - (vo_dy + d_height);
+        rcl.xRight  = rcl.xLeft   + d_width;
+        rcl.yTop    = rcl.yBottom + d_height;
     } else {
         vo_fs = 0;
 

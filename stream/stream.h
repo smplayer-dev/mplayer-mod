@@ -63,6 +63,7 @@
 /// streams that use the new api should check the mode at open
 #define STREAM_READ  0
 #define STREAM_WRITE 1
+#define STREAM_APPEND 2
 /// Seek flags, if not mannualy set and s->seek isn't NULL
 /// MP_STREAM_SEEK is automaticly set
 #define MP_STREAM_SEEK_BW  2
@@ -178,7 +179,7 @@ typedef struct stream {
   streaming_ctrl_t *streaming_ctrl;
 #endif
   unsigned char buffer[STREAM_BUFFER_SIZE>STREAM_MAX_SECTOR_SIZE?STREAM_BUFFER_SIZE:STREAM_MAX_SECTOR_SIZE];
-  FILE *capture_file;
+  struct stream *capture_stream;
 } stream_t;
 
 #ifdef CONFIG_NETWORKING
@@ -361,7 +362,7 @@ static inline int stream_skip(stream_t *s, int64_t len)
 void stream_reset(stream_t *s);
 int stream_control(stream_t *s, int cmd, void *arg);
 stream_t* new_stream(int fd,int type);
-void free_stream(stream_t *s);
+int free_stream(stream_t *s);
 stream_t* new_memory_stream(unsigned char* data,int len);
 stream_t* open_stream(const char* filename,char** options,int* file_format);
 stream_t* open_stream_full(const char* filename,int mode, char** options, int* file_format);
@@ -392,6 +393,7 @@ extern char *dvd_device;
 extern const m_option_t dvbin_opts_conf[];
 
 extern char *rtsp_destination;
+extern char *lavfstreamopts;
 
 typedef struct {
  int id; // 0 - 31 mpeg; 128 - 159 ac3; 160 - 191 pcm
@@ -404,7 +406,7 @@ int bluray_id_from_lang(stream_t *s, enum stream_ctrl_type type, const char *lan
 
 int parse_chapter_range(const m_option_t *conf, const char *range);
 
-#if defined(__MINGW32__) || defined(__CYGWIN__)
+#ifdef __MINGW32__
 wchar_t *utf8_to_wide_char(const char *utf8);
 char *utf8_to_local_windows_code_page(const char *utf8);
 #endif

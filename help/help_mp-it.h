@@ -526,6 +526,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "Cache"
 #define MSGTR_GUI_CacheSize "Dimensione cache"
 #define MSGTR_GUI_Cancel "Annulla"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_Center "Centro"
 #define MSGTR_GUI_Channel1 "Canale 1"
 #define MSGTR_GUI_Channel2 "Canale 2"
@@ -542,6 +544,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_CodecFamilyVideo "Famiglia codec video"
 #define MSGTR_GUI_CodecsAndLibraries "Codec e librerie di terze parti"
 #define MSGTR_GUI_Coefficient "Coefficiente"
+#define MSGTR_GUI_ConfigFileError "errore file di configurazione\n"
 #define MSGTR_GUI_Configure "Configura"
 #define MSGTR_GUI_ConfigureDriver "Configura driver"
 #define MSGTR_GUI_Contrast "Contrasto"
@@ -607,16 +610,17 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Hue "Tonalità"
 #define MSGTR_GUI_Lavc "Usa LAVC (FFmpeg)"
 #define MSGTR_GUI_MaximumUsageSpareCPU "Qualità automatica"
+#define MSGTR_GUI_MemAllocFailed MSGTR_MemAllocFailed
 #define MSGTR_GUI_Miscellaneous "Varie"
 #define MSGTR_GUI_Mixer "Mixer"
 #define MSGTR_GUI_MixerChannel "Canale mixer"
 #define MSGTR_GUI_MSG_AddingVideoFilter "[GUI] Aggiungo filtro video: %s\n"
 #define MSGTR_GUI_MSG_ColorDepthTooLow "Spiacente, la profondità colore è troppo bassa.\n"
 #define MSGTR_GUI_MSG_DragAndDropNothing "D&D: Nessun valore di ritorno!\n"
-#define MSGTR_GUI_MSG_DXR3NeedsLavc "Mi dispiace, non puoi riprodurre file non-MPEG con il tuo dispositivo DXR3/H+\nsenza ricodificarli.\nAbilita lavc nella finestra di configurazione DXR3/H+."
+#define MSGTR_GUI_MSG_DXR3NeedsLavc "Mi dispiace, non puoi riprodurre file non-MPEG con il tuo dispositivo DXR3/H+\nsenza ricodificarli.\nAbilita lavc nella finestra di configurazione DXR3/H+.\n"
 #define MSGTR_GUI_MSG_LoadingSubtitle "[GUI] Carico sottotitoli: %s\n"
 #define MSGTR_GUI_MSG_MemoryErrorImage "Spiacente, non abbastanza memoria per il tracciare il buffer.\n"
-#define MSGTR_GUI_MSG_MemoryErrorWindow "Mi dispiace, non c'è abbastanza memoria per tracciare il buffer."
+#define MSGTR_GUI_MSG_MemoryErrorWindow "Mi dispiace, non c'è abbastanza memoria per tracciare il buffer.\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "nessun file caricato"
 #define MSGTR_GUI_MSG_NoMediaOpened "nessun media aperto"
 #define MSGTR_GUI_MSG_NotAFile0 "Questo non sembra essere un file...\n"
@@ -642,7 +646,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_MSG_SkinUnknownParameter "parametro sconosciuto  (%s)\n"
 #define MSGTR_GUI_MSG_TooManyWindows "Ci sono troppe finestre aperte.\n"
 #define MSGTR_GUI_MSG_UnableToSaveOption "[cfg] non riesco a salvare l'opzione '%s'.\n"
-#define MSGTR_GUI_MSG_VideoOutError "Mi dispiace, non ho trovato un driver di output video compatibile con la GUI."
+#define MSGTR_GUI_MSG_VideoOutError "Mi dispiace, non ho trovato un driver di output video compatibile con la GUI.\n"
 #define MSGTR_GUI_MSG_XShapeError "Spiacente, il tuo sistema non supporta l'estensione XShape.\n"
 #define MSGTR_GUI_MSG_XSharedMemoryError "errore estensione 'shared memory'\n"
 #define MSGTR_GUI_MSG_XSharedMemoryUnavailable "Spiacente, il tuo sistema non supporta l'estensione 'X shared memory'.\n"
@@ -714,6 +718,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Video "Video"
 #define MSGTR_GUI_VideoEncoder "Video encoder"
 #define MSGTR_GUI_VideoTracks "Traccia video"
+#define MSGTR_GUI_Volume MSGTR_Volume
 #define MSGTR_GUI_Warning "Avvertimento!"
 
 // ======================= video output drivers ========================

@@ -40,6 +40,7 @@
 #include "libavutil/common.h"
 #include "libavutil/intreadwrite.h"
 #include "avcodec.h"
+#include "decode.h"
 #include "internal.h"
 
 
@@ -323,6 +324,9 @@ static int cinepak_predecode_check (CinepakContext *s)
     num_strips  = AV_RB16 (&s->data[8]);
     encoded_buf_size = AV_RB24(&s->data[1]);
 
+    if (s->size < encoded_buf_size * (int64_t)(100 - s->avctx->discard_damaged_percentage) / 100)
+        return AVERROR_INVALIDDATA;
+
     /* if this is the first frame, check for deviant Sega FILM data */
     if (s->sega_film_skip_bytes == -1) {
         if (!encoded_buf_size) {
@@ -352,6 +356,13 @@ static int cinepak_predecode_check (CinepakContext *s)
 
     if (s->size < 10 + s->sega_film_skip_bytes + num_strips * 12)
         return AVERROR_INVALIDDATA;
+
+    if (num_strips) {
+        const uint8_t *data = s->data + 10 + s->sega_film_skip_bytes;
+        int strip_size = AV_RB24 (data + 1);
+        if (strip_size < 12 || strip_size > encoded_buf_size)
+            return AVERROR_INVALIDDATA;
+    }
 
     return 0;
 }
@@ -463,18 +474,11 @@ static int cinepak_decode_frame(AVCodecContext *avctx,
         return ret;
     }
 
-    if ((ret = ff_reget_buffer(avctx, s->frame)) < 0)
+    if ((ret = ff_reget_buffer(avctx, s->frame, 0)) < 0)
         return ret;
 
     if (s->palette_video) {
-        int size;
-        const uint8_t *pal = av_packet_get_side_data(avpkt, AV_PKT_DATA_PALETTE, &size);
-        if (pal && size == AVPALETTE_SIZE) {
-            s->frame->palette_has_changed = 1;
-            memcpy(s->pal, pal, AVPALETTE_SIZE);
-        } else if (pal) {
-            av_log(avctx, AV_LOG_ERROR, "Palette size %d is wrong\n", size);
-        }
+        s->frame->palette_has_changed = ff_copy_palette(s->pal, avpkt, avctx);
     }
 
     if ((ret = cinepak_decode(s)) < 0) {
@@ -502,7 +506,7 @@ static av_cold int cinepak_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec ff_cinepak_decoder = {
+const AVCodec ff_cinepak_decoder = {
     .name           = "cinepak",
     .long_name      = NULL_IF_CONFIG_SMALL("Cinepak"),
     .type           = AVMEDIA_TYPE_VIDEO,
@@ -512,4 +516,5 @@ AVCodec ff_cinepak_decoder = {
     .close          = cinepak_decode_end,
     .decode         = cinepak_decode_frame,
     .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

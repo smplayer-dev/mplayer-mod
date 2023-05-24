@@ -676,6 +676,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "Önbellek"
 #define MSGTR_GUI_CacheSize "Önbellek boyutu"
 #define MSGTR_GUI_Cancel "İptal"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_Center "Merkez"
 #define MSGTR_GUI_Channel1 "Kanal 1"
 #define MSGTR_GUI_Channel2 "Kanal 2"
@@ -692,6 +694,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_CodecFamilyVideo "Video kodlama sınıfı"
 #define MSGTR_GUI_CodecsAndLibraries " Kodekler ve üçüncü parti kütüphaneleri"
 #define MSGTR_GUI_Coefficient "Katsayı"
+#define MSGTR_GUI_ConfigFileError "ayar dosyası hatası\n"
 #define MSGTR_GUI_Configure "Ayarla"
 #define MSGTR_GUI_ConfigureDriver "Sürücüyü Ayarla"
 #define MSGTR_GUI_Contrast "Karşıtlık"
@@ -757,16 +760,17 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Hue "Renk"
 #define MSGTR_GUI_Lavc "LAVC kullan (FFmpeg)"
 #define MSGTR_GUI_MaximumUsageSpareCPU "Otomatik kalite"
+#define MSGTR_GUI_MemAllocFailed MSGTR_MemAllocFailed
 #define MSGTR_GUI_Miscellaneous "Çeşitli"
 #define MSGTR_GUI_Mixer "Karıştırıcı"
 #define MSGTR_GUI_MixerChannel "Karıştırıcı kanalı"
 #define MSGTR_GUI_MSG_AddingVideoFilter "[GUI] Video filtresi ekleniyor: %s\n"
 #define MSGTR_GUI_MSG_ColorDepthTooLow "Üzgünüm, renk derinliği çok düşük.\n"
 #define MSGTR_GUI_MSG_DragAndDropNothing "D&D: Hiçbirşey geri dönmedi!\n"
-#define MSGTR_GUI_MSG_DXR3NeedsLavc "Üzgünüm, MPEG olmayan dosyaları DXR3/H+ aygıtınızla oynatamazsınız. \nLütfen DXR3/H+ ayarlarından lavc seçeneğini etkinleştirin."
+#define MSGTR_GUI_MSG_DXR3NeedsLavc "Üzgünüm, MPEG olmayan dosyaları DXR3/H+ aygıtınızla oynatamazsınız. \nLütfen DXR3/H+ ayarlarından lavc seçeneğini etkinleştirin.\n"
 #define MSGTR_GUI_MSG_LoadingSubtitle "[GUI] Altyazılar yükleniyor: %s\n"
 #define MSGTR_GUI_MSG_MemoryErrorImage "Üzgünüm, ilerleme tamponu için yeterli bellek yok.\n"
-#define MSGTR_GUI_MSG_MemoryErrorWindow "Üzgünüm, tampon için yeterli hafıza yok."
+#define MSGTR_GUI_MSG_MemoryErrorWindow "Üzgünüm, tampon için yeterli hafıza yok.\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "Dosya yüklenemedi"
 #define MSGTR_GUI_MSG_NoMediaOpened "Medya yok"
 #define MSGTR_GUI_MSG_NotAFile0 " Bu bir dosya olarak görünmüyor...\n"
@@ -792,7 +796,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_MSG_SkinUnknownParameter "bilinmeyen parametre (%s)\n"
 #define MSGTR_GUI_MSG_TooManyWindows "Çok sayıda açık pencere var.\n"
 #define MSGTR_GUI_MSG_UnableToSaveOption "[cfg] '%s' seçeneği kaydedilemiyor.\n"
-#define MSGTR_GUI_MSG_VideoOutError "Üzgünüm, KGA ile uyumlu video çıkış sürücüsü bulunamadı."
+#define MSGTR_GUI_MSG_VideoOutError "Üzgünüm, KGA ile uyumlu video çıkış sürücüsü bulunamadı.\n"
 #define MSGTR_GUI_MSG_XShapeError "Üzgünüm, sisteminiz Xshape genişletmesini desteklemiyor.\n"
 #define MSGTR_GUI_MSG_XSharedMemoryError "paylaşımlı bellek genişletme hatası\n"
 #define MSGTR_GUI_MSG_XSharedMemoryUnavailable "Üzgünüm, sisteminiz X paylaşımlı bellek genişletmesini desteklemiyor.\n"
@@ -864,6 +868,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Video "Video"
 #define MSGTR_GUI_VideoEncoder "Video kodlayıcı"
 #define MSGTR_GUI_VideoTracks "Video parçası"
+#define MSGTR_GUI_Volume MSGTR_Volume
 #define MSGTR_GUI_Warning "Uyarı!"
 
 // ======================= VO Video Output drivers ========================

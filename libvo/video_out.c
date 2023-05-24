@@ -119,7 +119,6 @@ extern const vo_functions_t video_out_zr2;
 extern const vo_functions_t video_out_bl;
 extern const vo_functions_t video_out_fbdev2;
 extern const vo_functions_t video_out_png;
-extern const vo_functions_t video_out_shm;
 extern const vo_functions_t video_out_ggi;
 extern const vo_functions_t video_out_aa;
 extern const vo_functions_t video_out_caca;
@@ -130,7 +129,6 @@ extern const vo_functions_t video_out_directx;
 extern const vo_functions_t video_out_kva;
 extern const vo_functions_t video_out_dxr2;
 extern const vo_functions_t video_out_dxr3;
-extern const vo_functions_t video_out_ivtv;
 extern const vo_functions_t video_out_v4l2;
 extern const vo_functions_t video_out_jpeg;
 extern const vo_functions_t video_out_gif89a;
@@ -173,6 +171,9 @@ const vo_functions_t* const video_out_drivers[] =
         &video_out_kva,
 #endif
 #ifdef CONFIG_COREVIDEO
+#ifdef CONFIG_GL
+        &video_out_gl_nosw,
+#endif
         &video_out_corevideo,
 #endif
 #ifdef CONFIG_QUARTZ
@@ -202,8 +203,10 @@ const vo_functions_t* const video_out_drivers[] =
 #ifdef CONFIG_XV
         &video_out_xv,
 #endif
+#ifndef CONFIG_COREVIDEO
 #ifdef CONFIG_GL
         &video_out_gl_nosw,
+#endif
 #endif
 #ifdef CONFIG_X11
         &video_out_x11,
@@ -246,9 +249,6 @@ const vo_functions_t* const video_out_drivers[] =
 #ifdef CONFIG_DXR3
         &video_out_dxr3,
 #endif
-#ifdef CONFIG_IVTV
-        &video_out_ivtv,
-#endif
 #ifdef CONFIG_V4L2_DECODER
         &video_out_v4l2,
 #endif
@@ -275,18 +275,17 @@ const vo_functions_t* const video_out_drivers[] =
 #endif
         &video_out_cvidix,
 #endif
-        &video_out_null,
         // should not be auto-selected
 #if CONFIG_XVMC
         &video_out_xvmc,
 #endif
+        &video_out_null,
         &video_out_mpegpes,
 #ifdef CONFIG_YUV4MPEG
         &video_out_yuv4mpeg,
 #endif
 #ifdef CONFIG_FFMPEG
         &video_out_png,
-        &video_out_shm,
 #endif
 #ifdef CONFIG_JPEG
         &video_out_jpeg,

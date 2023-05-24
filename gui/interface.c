@@ -78,6 +78,7 @@ guiInterface_t guiInfo = {
     .PlaylistNext = True
 };
 
+static int skin;
 static int current_volume;
 static int guiInitialized;
 static int orig_fontconfig;
@@ -137,7 +138,7 @@ static void add_vf(const char *vf, const char * const *argvf)
         vf_settings[0].attribs = listDup(argvf);
     }
 
-    mp_msg(MSGT_GPLAYER, MSGL_INFO, MSGTR_GUI_MSG_AddingVideoFilter, vf);
+    mp_msg(MSGT_GPLAYER, MSGL_INFO, _(MSGTR_GUI_MSG_AddingVideoFilter), vf);
 }
 
 /**
@@ -181,7 +182,7 @@ static void remove_vf(char *vf)
             if (strcmp(vf_settings[i].name, vf) == 0) {
                 int j;
 
-                mp_msg(MSGT_GPLAYER, MSGL_INFO, MSGTR_GUI_MSG_RemovingVideoFilter, vf);
+                mp_msg(MSGT_GPLAYER, MSGL_INFO, _(MSGTR_GUI_MSG_RemovingVideoFilter), vf);
 
                 free(vf_settings[i].name);
                 listFree(&vf_settings[i].attribs);
@@ -224,6 +225,13 @@ void guiInit(void)
     plItem *playlist;
 
     mp_msg(MSGT_GPLAYER, MSGL_V, "GUI init.\n");
+
+#ifdef ENABLE_NLS
+    setlocale(LC_MESSAGES, "");
+    bindtextdomain(GETTEXT_PACKAGE, LOCALEDIR);
+    bind_textdomain_codeset(GETTEXT_PACKAGE, "UTF-8");
+    textdomain(GETTEXT_PACKAGE);
+#endif
 
     /* check options */
 
@@ -268,25 +276,36 @@ void guiInit(void)
     mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[interface] skin directory #1: %s\n", skinDirInHome);
     mp_msg(MSGT_GPLAYER, MSGL_DBG2, "[interface] skin directory #2: %s\n", skinDirInData);
 
-    if (!skinName)
+    skin = (skinName != NULL);
+
+    if (!skin)
         skinName = strdup("default");
 
     ret = skinRead(skinName);
 
     if (ret == -1 && strcmp(skinName, "default") != 0) {
-        mp_msg(MSGT_GPLAYER, MSGL_WARN, MSGTR_GUI_MSG_SkinCfgSelectedNotFound, skinName);
+        mp_msg(MSGT_GPLAYER, MSGL_WARN, _(MSGTR_GUI_MSG_SkinCfgSelectedNotFound), skinName);
 
-        skinName = strdup("default");
-        ret      = skinRead(skinName);
+        setdup(&skinName, "default");
+        ret = skinRead(skinName);
     }
 
     switch (ret) {
     case -1:
-        gmp_msg(MSGT_GPLAYER, MSGL_FATAL, MSGTR_GUI_MSG_SkinCfgNotFound, skinName);
-        mplayer(MPLAYER_EXIT_GUI, EXIT_ERROR, 0);
+        if (skin) {
+            gmp_msg(MSGT_GPLAYER, MSGL_FATAL, _(MSGTR_GUI_MSG_SkinCfgNotFound), skinName);
+            mplayer(MPLAYER_EXIT_GUI, EXIT_ERROR, 0);
+        } else {
+            if (skinRead("Noskin") != 0)
+                mplayer(MPLAYER_EXIT_GUI, EXIT_ERROR, 0);
+
+            gtkMessageBox(MSGBOX_WARNING | MSGBOX_WAIT, _(MSGTR_GUI_MSG_NoSkinInstalled));
+            setdup(&skinName, "");
+            break;
+        }
 
     case -2:
-        gmp_msg(MSGT_GPLAYER, MSGL_FATAL, MSGTR_GUI_MSG_SkinCfgError, skinName);
+        gmp_msg(MSGT_GPLAYER, MSGL_FATAL, _(MSGTR_GUI_MSG_SkinCfgError), skinName);
         mplayer(MPLAYER_EXIT_GUI, EXIT_ERROR, 0);
     }
 
@@ -339,13 +358,15 @@ void guiInit(void)
 
         guiInfo.VideoWindow = True;
 
-        if (gtkLoadFullscreen)
+        if (fullscreen)
             uiFullScreen();
     } else
         wsWindowBackground(&guiApp.videoWindow, 0, 0, 0);
 
-    if (gtkLoadFullscreen)
+    if (fullscreen) {
+        guiApp.videoWindow.isFullScreen = True;
         btnSet(evFullScreen, btnPressed);
+    }
 
     guiInfo.Playing = GUI_STOP;
 
@@ -633,7 +654,7 @@ int gui(int what, void *data)
         }
 
         if (!video_driver_list && !video_driver_list[0]) {
-            gmp_msg(MSGT_GPLAYER, MSGL_FATAL, MSGTR_GUI_MSG_VideoOutError);
+            gmp_msg(MSGT_GPLAYER, MSGL_FATAL, _(MSGTR_GUI_MSG_VideoOutError));
             mplayer(MPLAYER_EXIT_GUI, EXIT_ERROR, 0);
         }
 
@@ -894,7 +915,7 @@ int gui(int what, void *data)
         btnSet(evSetMoviePosition, state);
 
         if (video_driver_list && !gstrcmp(video_driver_list[0], "dxr3") && (((demuxer_t *)mpctx_get_demuxer(guiInfo.mpcontext))->file_format != DEMUXER_TYPE_MPEG_PS) && !gtkVfLAVC) {
-            gtkMessageBox(MSGBOX_FATAL, MSGTR_GUI_MSG_DXR3NeedsLavc);
+            gtkMessageBox(MSGBOX_FATAL, _(MSGTR_GUI_MSG_DXR3NeedsLavc));
             return False;
         }
 
@@ -977,19 +998,13 @@ int gui(int what, void *data)
         if (guiInfo.Start)
             uiAbsSeek(guiInfo.Start);
 
-        // These must be done here (in the last call from MPlayer before
-        // playback starts) and not in GUI_SETUP_VIDEO_WINDOW, because...
-
-        // ...without video there will be no call to GUI_SETUP_VIDEO_WINDOW
+        // This must be done here (in the last call from MPlayer before
+        // playback starts) and not in GUI_SETUP_VIDEO_WINDOW, because
+        // without video there will be no call to GUI_SETUP_VIDEO_WINDOW
         if (!guiInfo.VideoWindow) {
             wsWindowVisibility(&guiApp.videoWindow, wsHideWindow);
-            btnSet(evFullScreen, gtkLoadFullscreen ? btnPressed : btnReleased);
+            btnSet(evFullScreen, fullscreen ? btnPressed : btnReleased);
         }
-
-        // ...option variable fullscreen determines whether MPlayer will handle
-        //    the window given by WinID as fullscreen window (and will do aspect
-        //    scaling then) or not - quite rubbish
-        fullscreen = gtkLoadFullscreen;
 
         break;
 
@@ -1025,7 +1040,7 @@ int gui(int what, void *data)
                 wsWindowVisibility(&guiApp.videoWindow, wsShowWindow);
         }
 
-        if (gtkLoadFullscreen ^ guiApp.videoWindow.isFullScreen)
+        if (fullscreen ^ guiApp.videoWindow.isFullScreen)
             uiEvent(evFullScreen, True);
 
         if (guiWinID >= 0)
@@ -1139,12 +1154,12 @@ int gui(int what, void *data)
                 if (!guiApp.videoWindow.Mapped)
                     wsWindowVisibility(&guiApp.videoWindow, wsShowWindow);
 
-                if (gtkLoadFullscreen ^ guiApp.videoWindow.isFullScreen)
-                    uiEvent(evFullScreen, False);
+                if (fullscreen ^ guiApp.videoWindow.isFullScreen)
+                    uiEvent(evFullScreen, -1);
             } else {
                 wsWindowVisibility(&guiApp.videoWindow, wsHideWindow);
                 guiInfo.VideoWindow = False;
-                btnSet(evFullScreen, gtkLoadFullscreen ? btnPressed : btnReleased);
+                btnSet(evFullScreen, fullscreen ? btnPressed : btnReleased);
             }
 
             gui(GUI_SET_STATE, (void *)GUI_STOP);
@@ -1289,7 +1304,7 @@ void mplayer(int what, float value, void *data)
             vo_font = read_font_desc(font_name, font_factor, 0);
 
             if (!vo_font)
-                gmp_msg(MSGT_GPLAYER, MSGL_ERR, MSGTR_CantLoadFont, font_name);
+                gmp_msg(MSGT_GPLAYER, MSGL_ERR, _(MSGTR_GUI_CantLoadFont), font_name);
         } else {
             char *fname = get_path("font/font.desc");
 
@@ -1395,19 +1410,19 @@ void mplayer(int what, float value, void *data)
 void mplayerLoadSubtitle(const char *name)
 {
     if (subdata) {
-        mp_msg(MSGT_GPLAYER, MSGL_INFO, MSGTR_GUI_MSG_RemovingSubtitle);
+        mp_msg(MSGT_GPLAYER, MSGL_INFO, _(MSGTR_GUI_MSG_RemovingSubtitle));
 
         sub_free(subdata);
         subdata = NULL;
     }
 
     if (name) {
-        mp_msg(MSGT_GPLAYER, MSGL_INFO, MSGTR_GUI_MSG_LoadingSubtitle, name);
+        mp_msg(MSGT_GPLAYER, MSGL_INFO, _(MSGTR_GUI_MSG_LoadingSubtitle), name);
 
         subdata = sub_read_file(name, guiInfo.sh_video ? guiInfo.sh_video->fps : 25);
 
         if (!subdata) {
-            gmp_msg(MSGT_GPLAYER, MSGL_ERR, MSGTR_CantLoadSub, name);
+            gmp_msg(MSGT_GPLAYER, MSGL_ERR, _(MSGTR_GUI_CantLoadSub), name);
             return;
         }
     }

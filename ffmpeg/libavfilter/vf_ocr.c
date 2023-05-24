@@ -43,7 +43,7 @@ typedef struct OCRContext {
 static const AVOption ocr_options[] = {
     { "datapath",  "set datapath",            OFFSET(datapath),  AV_OPT_TYPE_STRING, {.str=NULL},  0, 0, FLAGS },
     { "language",  "set language",            OFFSET(language),  AV_OPT_TYPE_STRING, {.str="eng"}, 0, 0, FLAGS },
-    { "whitelist", "set character whitelist", OFFSET(whitelist), AV_OPT_TYPE_STRING, {.str="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.:;,-+_!?\"'[]{}()<>|/\\=*&%$#@!~"}, 0, 0, FLAGS },
+    { "whitelist", "set character whitelist", OFFSET(whitelist), AV_OPT_TYPE_STRING, {.str="0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ.:;,-+_!?\"'[]{}()<>|/\\=*&%$#@!~ "}, 0, 0, FLAGS },
     { "blacklist", "set character blacklist", OFFSET(blacklist), AV_OPT_TYPE_STRING, {.str=""},    0, 0, FLAGS },
     { NULL }
 };
@@ -73,25 +73,17 @@ static av_cold int init(AVFilterContext *ctx)
     return 0;
 }
 
-static int query_formats(AVFilterContext *ctx)
-{
-    static const enum AVPixelFormat pix_fmts[] = {
-        AV_PIX_FMT_GRAY8,
-        AV_PIX_FMT_YUV410P, AV_PIX_FMT_YUV411P,
-        AV_PIX_FMT_YUV420P, AV_PIX_FMT_YUV422P,
-        AV_PIX_FMT_YUV440P, AV_PIX_FMT_YUV444P,
-        AV_PIX_FMT_YUVJ420P, AV_PIX_FMT_YUVJ422P,
-        AV_PIX_FMT_YUVJ440P, AV_PIX_FMT_YUVJ444P,
-        AV_PIX_FMT_YUVJ411P,
-        AV_PIX_FMT_YUVA444P, AV_PIX_FMT_YUVA422P, AV_PIX_FMT_YUVA420P,
-        AV_PIX_FMT_NONE
-    };
-
-    AVFilterFormats *fmts_list = ff_make_format_list(pix_fmts);
-    if (!fmts_list)
-        return AVERROR(ENOMEM);
-    return ff_set_common_formats(ctx, fmts_list);
-}
+static const enum AVPixelFormat pix_fmts[] = {
+    AV_PIX_FMT_GRAY8,
+    AV_PIX_FMT_YUV410P, AV_PIX_FMT_YUV411P,
+    AV_PIX_FMT_YUV420P, AV_PIX_FMT_YUV422P,
+    AV_PIX_FMT_YUV440P, AV_PIX_FMT_YUV444P,
+    AV_PIX_FMT_YUVJ420P, AV_PIX_FMT_YUVJ422P,
+    AV_PIX_FMT_YUVJ440P, AV_PIX_FMT_YUVJ444P,
+    AV_PIX_FMT_YUVJ411P,
+    AV_PIX_FMT_YUVA444P, AV_PIX_FMT_YUVA422P, AV_PIX_FMT_YUVA420P,
+    AV_PIX_FMT_NONE
+};
 
 static int filter_frame(AVFilterLink *inlink, AVFrame *in)
 {
@@ -100,11 +92,21 @@ static int filter_frame(AVFilterLink *inlink, AVFrame *in)
     AVFilterLink *outlink = ctx->outputs[0];
     OCRContext *s = ctx->priv;
     char *result;
+    int *confs;
 
     result = TessBaseAPIRect(s->tess, in->data[0], 1,
                              in->linesize[0], 0, 0, in->width, in->height);
+    confs = TessBaseAPIAllWordConfidences(s->tess);
     av_dict_set(metadata, "lavfi.ocr.text", result, 0);
+    for (int i = 0; confs[i] != -1; i++) {
+        char number[256];
+
+        snprintf(number, sizeof(number), "%d ", confs[i]);
+        av_dict_set(metadata, "lavfi.ocr.confidence", number, AV_DICT_APPEND);
+    }
+
     TessDeleteText(result);
+    TessDeleteIntArray(confs);
 
     return ff_filter_frame(outlink, in);
 }
@@ -125,7 +127,6 @@ static const AVFilterPad ocr_inputs[] = {
         .type         = AVMEDIA_TYPE_VIDEO,
         .filter_frame = filter_frame,
     },
-    { NULL }
 };
 
 static const AVFilterPad ocr_outputs[] = {
@@ -133,17 +134,17 @@ static const AVFilterPad ocr_outputs[] = {
         .name         = "default",
         .type         = AVMEDIA_TYPE_VIDEO,
     },
-    { NULL }
 };
 
-AVFilter ff_vf_ocr = {
+const AVFilter ff_vf_ocr = {
     .name          = "ocr",
     .description   = NULL_IF_CONFIG_SMALL("Optical Character Recognition."),
     .priv_size     = sizeof(OCRContext),
     .priv_class    = &ocr_class,
-    .query_formats = query_formats,
     .init          = init,
     .uninit        = uninit,
-    .inputs        = ocr_inputs,
-    .outputs       = ocr_outputs,
+    .flags         = AVFILTER_FLAG_METADATA_ONLY,
+    FILTER_INPUTS(ocr_inputs),
+    FILTER_OUTPUTS(ocr_outputs),
+    FILTER_PIXFMTS_ARRAY(pix_fmts),
 };

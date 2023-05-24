@@ -491,6 +491,11 @@ static av_cold int decode_init(AVCodecContext *avctx)
 
     ctx->avctx   = avctx;
     ctx->version = !avctx->extradata_size;
+    // early sanity check before allocations to avoid need for deallocation code.
+    if (!ctx->version && avctx->extradata_size < 1026) {
+        av_log(avctx, AV_LOG_ERROR, "Not enough extradata.\n");
+        return AVERROR_INVALIDDATA;
+    }
 
     avctx->pix_fmt = ctx->version ? AV_PIX_FMT_RGB565 : AV_PIX_FMT_PAL8;
 
@@ -505,11 +510,6 @@ static av_cold int decode_init(AVCodecContext *avctx)
 
     if (!ctx->version) {
         int i;
-
-        if (avctx->extradata_size < 1026) {
-            av_log(avctx, AV_LOG_ERROR, "Not enough extradata.\n");
-            return AVERROR_INVALIDDATA;
-        }
 
         ctx->subversion = AV_RL16(avctx->extradata);
         for (i = 0; i < PALETTE_SIZE; i++)
@@ -1358,8 +1358,10 @@ static int read_frame_header(SANMVideoContext *ctx, SANMFrameHeader *hdr)
 
 static void fill_frame(uint16_t *pbuf, int buf_size, uint16_t color)
 {
-    while (buf_size--)
+    if (buf_size--) {
         *pbuf++ = color;
+        av_memcpy_backptr((uint8_t*)pbuf, 2, 2*buf_size);
+    }
 }
 
 static int copy_output(SANMVideoContext *ctx, SANMFrameHeader *hdr)
@@ -1513,7 +1515,7 @@ static int decode_frame(AVCodecContext *avctx, void *data,
     return pkt->size;
 }
 
-AVCodec ff_sanm_decoder = {
+const AVCodec ff_sanm_decoder = {
     .name           = "sanm",
     .long_name      = NULL_IF_CONFIG_SMALL("LucasArts SANM/Smush video"),
     .type           = AVMEDIA_TYPE_VIDEO,
@@ -1523,4 +1525,5 @@ AVCodec ff_sanm_decoder = {
     .close          = decode_end,
     .decode         = decode_frame,
     .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

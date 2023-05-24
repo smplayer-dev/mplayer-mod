@@ -20,8 +20,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "hwaccel.h"
-#include "internal.h"
+#include "hwconfig.h"
+#include "mpegvideodec.h"
 #include "vaapi_decode.h"
 #include "vc1.h"
 #include "vc1data.h"

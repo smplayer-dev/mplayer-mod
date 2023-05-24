@@ -300,6 +300,9 @@ static int tgv_decode_frame(AVCodecContext *avctx,
             s->palette[i] = 0xFFU << 24 | AV_RB24(buf);
             buf += 3;
         }
+        if (buf_end - buf < 5) {
+            return AVERROR_INVALIDDATA;
+        }
     }
 
     if ((ret = ff_get_buffer(avctx, frame, AV_GET_BUFFER_FLAG_REF)) < 0)
@@ -356,7 +359,7 @@ static av_cold int tgv_decode_end(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec ff_eatgv_decoder = {
+const AVCodec ff_eatgv_decoder = {
     .name           = "eatgv",
     .long_name      = NULL_IF_CONFIG_SMALL("Electronic Arts TGV video"),
     .type           = AVMEDIA_TYPE_VIDEO,
@@ -366,4 +369,5 @@ AVCodec ff_eatgv_decoder = {
     .close          = tgv_decode_end,
     .decode         = tgv_decode_frame,
     .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

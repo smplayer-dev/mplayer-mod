@@ -29,19 +29,15 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
-#include <strings.h>
 
 #include "config.h"
+#include "libavutil/avstring.h"
 #include "mp_msg.h"
 #include "mixer.h"
 #include "help_mp.h"
 
 #ifdef HAVE_SYS_SOUNDCARD_H
 #include <sys/soundcard.h>
-#else
-#ifdef HAVE_SOUNDCARD_H
-#include <soundcard.h>
-#endif
 #endif
 
 #include "libaf/af_format.h"
@@ -259,7 +255,7 @@ static int init(int rate,int channels,int format,int flags){
       close(fd);
 
       for (i=0; i<SOUND_MIXER_NRDEVICES; i++){
-        if(!strcasecmp(mixer_channels[i], mchan)){
+        if(!av_strcasecmp(mixer_channels[i], mchan)){
           if(!(devs & (1 << i))){
             mp_msg(MSGT_AO,MSGL_ERR,MSGTR_AO_OSS_ChanNotFound,mchan);
             i = SOUND_MIXER_NRDEVICES+1;
@@ -469,7 +465,8 @@ static void reset(void){
     }
     fail |= ioctl (audio_fd, SNDCTL_DSP_SPEED, &ao_data.samplerate) == -1;
   }
-  mp_msg(MSGT_AO,MSGL_WARN, "OSS: Reset failed\n");
+  if (fail)
+    mp_msg(MSGT_AO,MSGL_WARN, "OSS: Reset failed\n");
 }
 
 // stop playing, keep buffers (for pause)

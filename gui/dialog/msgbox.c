@@ -53,8 +53,7 @@ static GtkWidget * CreateMessageBox( void )
  accel_group=gtk_accel_group_new();
 
  MessageBox=gtk_window_new( GTK_WINDOW_TOPLEVEL );
- gtk_widget_set_events( MessageBox,GDK_EXPOSURE_MASK | GDK_KEY_PRESS_MASK | GDK_KEY_RELEASE_MASK | GDK_VISIBILITY_NOTIFY_MASK );
- gtk_window_set_title( GTK_WINDOW( MessageBox ),"MPlayer " ELLIPSIS );
+ gtk_window_set_title( GTK_WINDOW( MessageBox ),MPlayer );
  gtk_window_set_position( GTK_WINDOW( MessageBox ),GTK_WIN_POS_CENTER );
  gtk_window_set_modal( GTK_WINDOW( MessageBox ),TRUE );
  gtk_window_set_policy( GTK_WINDOW( MessageBox ),FALSE,FALSE,TRUE );
@@ -96,7 +95,7 @@ static GtkWidget * CreateMessageBox( void )
 
  gtkAddHSeparator( vbox1 );
  hbuttonbox1=gtkAddHButtonBox( vbox1 );
- Ok=gtkAddButton( MSGTR_GUI_Ok,hbuttonbox1 );
+ Ok=gtkAddButton( _(MSGTR_GUI_Ok),hbuttonbox1 );
 
  gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Return,0,GTK_ACCEL_VISIBLE );
  gtk_widget_add_accelerator( Ok,"clicked",accel_group,GDK_Escape,0,GTK_ACCEL_VISIBLE );

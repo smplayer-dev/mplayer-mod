@@ -461,6 +461,18 @@ static int choose_glx_visual(Display *dpy, int scr, XVisualInfo *res_vi)
   XVisualInfo template, *vi_list;
   int vi_num, i, best_i, best_weight;
 
+#ifdef CONFIG_GUI
+  int value;
+
+  if (gui_vinfo) {
+    if (glXGetConfig(mDisplay, gui_vinfo, GLX_USE_GL, &value) == 0 && value == True) {
+      *res_vi = *gui_vinfo;
+      return 0;
+    } else
+      return -1;
+  }
+#endif
+
   template.screen = scr;
   vi_list = XGetVisualInfo(dpy, VisualScreenMask, &template, &vi_num);
   if (!vi_list) return -1;
@@ -519,6 +531,8 @@ static int config_glx(uint32_t d_width, uint32_t d_height, uint32_t flags, char 
       mp_msg(MSGT_VO, MSGL_FATAL, "[gl_tiled] no GLX support present\n");
       return -1;
     }
+
+  mp_msg(MSGT_VO, MSGL_V, "[gl_tiled] GLX chose visual with ID 0x%x\n", (int)vinfo->visualid);
 
   vo_x11_create_vo_window(vinfo, vo_dx, vo_dy, d_width, d_height,
           flags, vo_x11_create_colormap(vinfo), "gl_tiled", title);

@@ -62,6 +62,9 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     if (ret < 0)
         return ret;
 
+    if (bytestream2_get_bytes_left(&gb) < width*height / 255)
+        return AVERROR_INVALIDDATA;
+
     ret = ff_get_buffer(avctx, f, 0);
     if (ret < 0)
         return ret;
@@ -118,7 +121,7 @@ static int decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     return avpkt->size;
 }
 
-AVCodec ff_alias_pix_decoder = {
+const AVCodec ff_alias_pix_decoder = {
     .name         = "alias_pix",
     .long_name    = NULL_IF_CONFIG_SMALL("Alias/Wavefront PIX image"),
     .type         = AVMEDIA_TYPE_VIDEO,

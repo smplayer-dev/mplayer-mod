@@ -63,29 +63,50 @@ static void picmemset(PicContext *s, AVFrame *frame, unsigned value, int run,
     uint8_t *d;
     int shift = *plane * bits_per_plane;
     unsigned mask  = ((1U << bits_per_plane) - 1) << shift;
+    int xl = *x;
+    int yl = *y;
+    int planel = *plane;
+    int pixels_per_value = 8/bits_per_plane;
     value   <<= shift;
 
+    d = frame->data[0] + yl * frame->linesize[0];
     while (run > 0) {
         int j;
         for (j = 8-bits_per_plane; j >= 0; j -= bits_per_plane) {
-            d = frame->data[0] + *y * frame->linesize[0];
-            d[*x] |= (value >> j) & mask;
-            *x += 1;
-            if (*x == s->width) {
-                *y -= 1;
-                *x = 0;
-                if (*y < 0) {
-                   *y = s->height - 1;
-                   *plane += 1;
-                   if (*plane >= s->nb_planes)
-                       return;
+            d[xl] |= (value >> j) & mask;
+            xl += 1;
+            while (xl == s->width) {
+                yl -= 1;
+                xl = 0;
+                if (yl < 0) {
+                   yl = s->height - 1;
+                   planel += 1;
+                   if (planel >= s->nb_planes)
+                       goto end;
                    value <<= bits_per_plane;
                    mask  <<= bits_per_plane;
+                }
+                d = frame->data[0] + yl * frame->linesize[0];
+                if (s->nb_planes == 1 &&
+                    run*pixels_per_value >= s->width &&
+                    pixels_per_value < (s->width / pixels_per_value * pixels_per_value)
+                    ) {
+                    for (; xl < pixels_per_value; xl ++) {
+                        j = (j < bits_per_plane ? 8 : j) - bits_per_plane;
+                        d[xl] |= (value >> j) & mask;
+                    }
+                    av_memcpy_backptr(d+xl, pixels_per_value, s->width - xl);
+                    run -= s->width / pixels_per_value;
+                    xl = s->width / pixels_per_value * pixels_per_value;
                 }
             }
         }
         run--;
     }
+end:
+    *x = xl;
+    *y = yl;
+    *plane = planel;
 }
 
 static const uint8_t cga_mode45_index[6][4] = {
@@ -259,7 +280,7 @@ finish:
     return avpkt->size;
 }
 
-AVCodec ff_pictor_decoder = {
+const AVCodec ff_pictor_decoder = {
     .name           = "pictor",
     .long_name      = NULL_IF_CONFIG_SMALL("Pictor/PC Paint"),
     .type           = AVMEDIA_TYPE_VIDEO,

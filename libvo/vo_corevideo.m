@@ -19,6 +19,8 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
+#define GL_SILENCE_DEPRECATION
+
 #import "vo_corevideo.h"
 #include <sys/types.h>
 #include <sys/ipc.h>
@@ -78,6 +80,8 @@ static uint32_t image_height;
 static uint32_t image_bytes;
 static uint32_t image_stride;
 static uint32_t image_format;
+
+static int pending_reshape;
 
 static vo_info_t info =
 {
@@ -244,6 +248,7 @@ static void flip_page(void)
 			image_page = 1 - image_page;
 			image_data = image_datas[image_page];
 		}
+		[mpGLView display];
 	}
 }
 
@@ -458,6 +463,7 @@ static int control(uint32_t request, void *data)
 */
 - (void)prepareOpenGL
 {
+	[super prepareOpenGL];
 	glEnable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST);
 	glDepthMask(GL_FALSE);
@@ -470,25 +476,8 @@ static int control(uint32_t request, void *data)
 */
 - (void)reshape
 {
-	int d_width, d_height;
-
 	[super reshape];
-
-	glViewport(0, 0, vo_dwidth, vo_dheight);
-	glMatrixMode(GL_PROJECTION);
-	glLoadIdentity();
-	glOrtho(0, vo_dwidth, vo_dheight, 0, -1.0, 1.0);
-	glMatrixMode(GL_MODELVIEW);
-	glLoadIdentity();
-
-	d_width  = vo_dwidth;
-	d_height = vo_dheight;
-	//set texture frame
-	if(aspect_scaling())
-	{
-		aspect(&d_width, &d_height, A_WINZOOM);
-	}
-	textureFrame = NSMakeRect((vo_dwidth - d_width) / 2, (vo_dheight - d_height) / 2, d_width, d_height);
+	pending_reshape = 1;
 }
 
 /*
@@ -496,10 +485,34 @@ static int control(uint32_t request, void *data)
 */
 - (void) render
 {
+	// setting Matrix does not work inside the reshape function, so do it here
+	// TODO: sometimes it still seems to end up with the wrong width/height when toggling fullscreen??
+	if (pending_reshape) {
+		int d_width = vo_dwidth, d_height = vo_dheight;
+
+		//set texture frame
+		if(aspect_scaling())
+		{
+			aspect(&d_width, &d_height, A_WINZOOM);
+		}
+		textureFrame = NSMakeRect((vo_dwidth - d_width) / 2, (vo_dheight - d_height) / 2, d_width, d_height);
+
+		glViewport(0, 0, vo_dwidth, vo_dheight);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, vo_dwidth, vo_dheight, 0, -1.0, 1.0);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		pending_reshape = 0;
+	}
+
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	glEnable(CVOpenGLTextureGetTarget(texture));
 	glBindTexture(CVOpenGLTextureGetTarget(texture), CVOpenGLTextureGetName(texture));
+	glTexParameteri(CVOpenGLTextureGetTarget(texture), GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(CVOpenGLTextureGetTarget(texture), GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
 	glColor3f(1,1,1);
 	glBegin(GL_QUADS);

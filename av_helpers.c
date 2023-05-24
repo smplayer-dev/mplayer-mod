@@ -20,6 +20,7 @@
 
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
+#include "libavutil/intreadwrite.h"
 #include "mp_msg.h"
 #include "av_helpers.h"
 #include "libaf/reorder_ch.h"
@@ -98,7 +99,6 @@ void init_avcodec(void)
     if (!avcodec_initialized) {
         show_av_version(MSGT_DECVIDEO, "libavcodec", LIBAVCODEC_VERSION_INT,
                         avcodec_version(), avcodec_configuration());
-        avcodec_register_all();
         avcodec_initialized = 1;
         av_log_set_callback(mp_msp_av_log_callback);
     }
@@ -109,7 +109,6 @@ void init_avformat(void)
     if (!avformat_initialized) {
         show_av_version(MSGT_DEMUX, "libavformat", LIBAVFORMAT_VERSION_INT,
                         avformat_version(), avformat_configuration());
-        av_register_all();
         avformat_initialized = 1;
         av_log_set_callback(mp_msp_av_log_callback);
     }
@@ -132,8 +131,6 @@ int lavc_encode_audio(AVCodecContext *ctx, void *src, int src_len, void *dst, in
                             ctx->channels,
                             src_len / bps, bps);
     }
-    pkt.data = dst;
-    pkt.size = dst_len;
     frame->nb_samples = src_len / ctx->channels / bps;
     if (planar) {
         // TODO: this is horribly inefficient.
@@ -150,11 +147,112 @@ int lavc_encode_audio(AVCodecContext *ctx, void *src, int src_len, void *dst, in
             }
         }
     }
+    frame->format = ctx->sample_fmt;
+    frame->channels = ctx->channels;
     n = avcodec_fill_audio_frame(frame, ctx->channels, ctx->sample_fmt, src, src_len, 1);
     if (n < 0) return 0;
-    n = avcodec_encode_audio2(ctx, &pkt, frame, &got);
+    n = avcodec_send_frame(ctx, frame);
+    av_init_packet(&pkt);
+    got = avcodec_receive_packet(ctx, &pkt);
     av_frame_free(&frame);
     if (planar) av_free(src);
     if (n < 0) return n;
-    return got ? pkt.size : 0;
+    if (got >= 0) {
+        int size = pkt.size;
+        if (size > dst_len) return -1;
+        memcpy(dst, pkt.data, size);
+        av_packet_unref(&pkt);
+        return size;
+    }
+    return 0;
+}
+
+#define MERGE_MARKER 0x8c4d9d108e25e9feULL
+
+static void bytestream_put_buffer(uint8_t **b, const uint8_t *src, unsigned int size)
+{
+    memcpy(*b, src, size);
+    *b += size;
+}
+
+int mp_packet_merge_side_data(AVPacket *pkt){
+    if(pkt->side_data_elems){
+        AVBufferRef *buf;
+        int i;
+        uint8_t *p;
+        uint64_t size= pkt->size + 8LL + AV_INPUT_BUFFER_PADDING_SIZE;
+        AVPacket old= *pkt;
+        for (i=0; i<old.side_data_elems; i++) {
+            size += old.side_data[i].size + 5LL;
+        }
+        if (size > INT_MAX)
+            return AVERROR(EINVAL);
+        buf = av_buffer_alloc(size);
+        if (!buf)
+            return AVERROR(ENOMEM);
+        pkt->buf = buf;
+        pkt->data = p = buf->data;
+        pkt->size = size - AV_INPUT_BUFFER_PADDING_SIZE;
+        bytestream_put_buffer(&p, old.data, old.size);
+        for (i=old.side_data_elems-1; i>=0; i--) {
+            bytestream_put_buffer(&p, old.side_data[i].data, old.side_data[i].size);
+            AV_WB32(p, old.side_data[i].size);
+            p += 4;
+            *p++ = old.side_data[i].type | ((i==old.side_data_elems-1)*128);
+        }
+        AV_WB64(p, MERGE_MARKER);
+        p += 8;
+        memset(p, 0, AV_INPUT_BUFFER_PADDING_SIZE);
+        av_packet_unref(&old);
+        pkt->side_data_elems = 0;
+        pkt->side_data = NULL;
+        return 1;
+    }
+    return 0;
+}
+
+int mp_packet_split_side_data(AVPacket *pkt){
+    if (!pkt->side_data_elems && pkt->size >12 && AV_RB64(pkt->data + pkt->size - 8) == MERGE_MARKER){
+        int i;
+        unsigned int size;
+        uint8_t *p;
+
+        p = pkt->data + pkt->size - 8 - 5;
+        for (i=1; ; i++){
+            size = AV_RB32(p);
+            if (size>INT_MAX - 5 || p - pkt->data < size)
+                return 0;
+            if (p[4]&128)
+                break;
+            if (p - pkt->data < size + 5)
+                return 0;
+            p-= size+5;
+        }
+
+        if (i > AV_PKT_DATA_NB)
+            return AVERROR(ERANGE);
+
+        pkt->side_data = av_malloc_array(i, sizeof(*pkt->side_data));
+        if (!pkt->side_data)
+            return AVERROR(ENOMEM);
+
+        p= pkt->data + pkt->size - 8 - 5;
+        for (i=0; ; i++){
+            size= AV_RB32(p);
+            pkt->side_data[i].data = av_mallocz(size + AV_INPUT_BUFFER_PADDING_SIZE);
+            pkt->side_data[i].size = size;
+            pkt->side_data[i].type = p[4]&127;
+            if (!pkt->side_data[i].data)
+                return AVERROR(ENOMEM);
+            memcpy(pkt->side_data[i].data, p-size, size);
+            pkt->size -= size + 5;
+            if(p[4]&128)
+                break;
+            p-= size+5;
+        }
+        pkt->size -= 8;
+        pkt->side_data_elems = i+1;
+        return 1;
+    }
+    return 0;
 }

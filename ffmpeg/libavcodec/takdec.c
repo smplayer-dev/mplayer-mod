@@ -26,6 +26,7 @@
  */
 
 #include "libavutil/internal.h"
+#include "libavutil/mem_internal.h"
 #include "libavutil/samplefmt.h"
 
 #define BITSTREAM_READER_LE
@@ -176,8 +177,8 @@ static void set_sample_rate_params(AVCodecContext *avctx)
     } else {
         shift = 0;
     }
-    s->uval           = FFALIGN(avctx->sample_rate + 511 >> 9, 4) << shift;
-    s->subframe_scale = FFALIGN(avctx->sample_rate + 511 >> 9, 4) << 1;
+    s->uval           = FFALIGN(avctx->sample_rate + 511LL >> 9, 4) << shift;
+    s->subframe_scale = FFALIGN(avctx->sample_rate + 511LL >> 9, 4) << 1;
 }
 
 static av_cold int tak_decode_init(AVCodecContext *avctx)
@@ -653,7 +654,7 @@ static int decorrelate(TAKDecContext *s, int c1, int c2, int length)
                          s->residues[i    ] * s->filter[0];
                 }
 
-                v = av_clip_intp2(v >> 10, 13) * (1 << dshift) - *p1;
+                v = av_clip_intp2(v >> 10, 13) * (1U << dshift) - *p1;
                 *p1++ = v;
             }
 
@@ -678,7 +679,6 @@ static int tak_decode_frame(AVCodecContext *avctx, void *data,
 {
     TAKDecContext *s  = avctx->priv_data;
     AVFrame *frame    = data;
-    ThreadFrame tframe = { .f = data };
     GetBitContext *gb = &s->gb;
     int chan, i, ret, hsize;
 
@@ -741,7 +741,7 @@ static int tak_decode_frame(AVCodecContext *avctx, void *data,
                                              : s->ti.frame_samples;
 
     frame->nb_samples = s->nb_samples;
-    if ((ret = ff_thread_get_buffer(avctx, &tframe, 0)) < 0)
+    if ((ret = ff_thread_get_buffer(avctx, frame, 0)) < 0)
         return ret;
     ff_thread_finish_setup(avctx);
 
@@ -915,13 +915,6 @@ static int tak_decode_frame(AVCodecContext *avctx, void *data,
 }
 
 #if HAVE_THREADS
-static int init_thread_copy(AVCodecContext *avctx)
-{
-    TAKDecContext *s = avctx->priv_data;
-    s->avctx = avctx;
-    return 0;
-}
-
 static int update_thread_context(AVCodecContext *dst,
                                  const AVCodecContext *src)
 {
@@ -944,7 +937,7 @@ static av_cold int tak_decode_close(AVCodecContext *avctx)
     return 0;
 }
 
-AVCodec ff_tak_decoder = {
+const AVCodec ff_tak_decoder = {
     .name             = "tak",
     .long_name        = NULL_IF_CONFIG_SMALL("TAK (Tom's lossless Audio Kompressor)"),
     .type             = AVMEDIA_TYPE_AUDIO,
@@ -953,11 +946,11 @@ AVCodec ff_tak_decoder = {
     .init             = tak_decode_init,
     .close            = tak_decode_close,
     .decode           = tak_decode_frame,
-    .init_thread_copy = ONLY_IF_THREADS_ENABLED(init_thread_copy),
     .update_thread_context = ONLY_IF_THREADS_ENABLED(update_thread_context),
-    .capabilities     = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_FRAME_THREADS,
+    .capabilities     = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_FRAME_THREADS | AV_CODEC_CAP_CHANNEL_CONF,
     .sample_fmts      = (const enum AVSampleFormat[]) { AV_SAMPLE_FMT_U8P,
                                                         AV_SAMPLE_FMT_S16P,
                                                         AV_SAMPLE_FMT_S32P,
                                                         AV_SAMPLE_FMT_NONE },
+    .caps_internal    = FF_CODEC_CAP_INIT_THREADSAFE,
 };

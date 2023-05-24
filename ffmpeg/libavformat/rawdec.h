@@ -24,16 +24,22 @@
 
 #include "avformat.h"
 #include "libavutil/log.h"
-#include "libavutil/opt.h"
 
 typedef struct FFRawVideoDemuxerContext {
     const AVClass *class;     /**< Class for private options. */
+    int raw_packet_size;
     char *video_size;         /**< String describing video size, set by a private option. */
     char *pixel_format;       /**< Set by a private option. */
     AVRational framerate;     /**< AVRational describing framerate, set by a private option. */
 } FFRawVideoDemuxerContext;
 
-extern const AVOption ff_rawvideo_options[];
+typedef struct FFRawDemuxerContext {
+    const AVClass *class;     /**< Class for private options. */
+    int raw_packet_size;
+} FFRawDemuxerContext;
+
+extern const AVClass ff_rawvideo_demuxer_class;
+extern const AVClass ff_raw_demuxer_class;
 
 int ff_raw_read_partial_packet(AVFormatContext *s, AVPacket *pkt);
 
@@ -43,19 +49,8 @@ int ff_raw_video_read_header(AVFormatContext *s);
 
 int ff_raw_subtitle_read_header(AVFormatContext *s);
 
-int ff_raw_data_read_header(AVFormatContext *s);
-
-#define FF_RAWVIDEO_DEMUXER_CLASS(name)\
-static const AVClass name ## _demuxer_class = {\
-    .class_name = #name " demuxer",\
-    .item_name  = av_default_item_name,\
-    .option     = ff_rawvideo_options,\
-    .version    = LIBAVUTIL_VERSION_INT,\
-};
-
 #define FF_DEF_RAWVIDEO_DEMUXER2(shortname, longname, probe, ext, id, flag)\
-FF_RAWVIDEO_DEMUXER_CLASS(shortname)\
-AVInputFormat ff_ ## shortname ## _demuxer = {\
+const AVInputFormat ff_ ## shortname ## _demuxer = {\
     .name           = #shortname,\
     .long_name      = NULL_IF_CONFIG_SMALL(longname),\
     .read_probe     = probe,\
@@ -65,23 +60,14 @@ AVInputFormat ff_ ## shortname ## _demuxer = {\
     .flags          = flag,\
     .raw_codec_id   = id,\
     .priv_data_size = sizeof(FFRawVideoDemuxerContext),\
-    .priv_class     = &shortname ## _demuxer_class,\
+    .priv_class     = &ff_rawvideo_demuxer_class,\
 };
 
 #define FF_DEF_RAWVIDEO_DEMUXER(shortname, longname, probe, ext, id)\
 FF_DEF_RAWVIDEO_DEMUXER2(shortname, longname, probe, ext, id, AVFMT_GENERIC_INDEX)
 
-#define FF_RAWSUB_DEMUXER_CLASS(name)\
-static const AVClass name ## _demuxer_class = {\
-    .class_name = #name " demuxer",\
-    .item_name  = av_default_item_name,\
-    .option     = NULL,\
-    .version    = LIBAVUTIL_VERSION_INT,\
-};
-
 #define FF_DEF_RAWSUB_DEMUXER(shortname, longname, probe, ext, id, flag)\
-FF_RAWVIDEO_DEMUXER_CLASS(shortname)\
-AVInputFormat ff_ ## shortname ## _demuxer = {\
+const AVInputFormat ff_ ## shortname ## _demuxer = {\
     .name           = #shortname,\
     .long_name      = NULL_IF_CONFIG_SMALL(longname),\
     .read_probe     = probe,\
@@ -90,8 +76,8 @@ AVInputFormat ff_ ## shortname ## _demuxer = {\
     .extensions     = ext,\
     .flags          = flag,\
     .raw_codec_id   = id,\
-    .priv_data_size = 0,\
-    .priv_class     = &shortname ## _demuxer_class,\
+    .priv_data_size = sizeof(FFRawDemuxerContext),\
+    .priv_class     = &ff_raw_demuxer_class,\
 };
 
 #endif /* AVFORMAT_RAWDEC_H */

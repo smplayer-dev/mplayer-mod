@@ -376,7 +376,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_VideoStreamRequired "Наличие потока видео обязательно!\n"
 #define MSGTR_ForcingInputFPS "входные кадры/сек будут заменены на %5.3f\n"
 #define MSGTR_DemuxerDoesntSupportNosound "Этот демультиплексор пока что не поддерживает -nosound.\n"
-#define MSGTR_MemAllocFailed "не могу выделить память"
+#define MSGTR_MemAllocFailed "не могу выделить память\n"
 #define MSGTR_NoMatchingFilter "Не могу найти соответствующий фильтр/формат_аудиовывода!\n"
 #define MSGTR_MP3WaveFormatSizeNot30 "sizeof(MPEGLAYER3WAVEFORMAT)==%d!=30, возможно, сломанный компилятор C?\n"
 #define MSGTR_NoLavcAudioCodecName "Аудио LAVC, пропущено имя кодека!\n"
@@ -514,6 +514,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "Кэш"
 #define MSGTR_GUI_CacheSize "Размер кэша"
 #define MSGTR_GUI_Cancel "Отмена"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_Center "Центральная"
 #define MSGTR_GUI_Channel1 "Канал 1"
 #define MSGTR_GUI_Channel2 "Канал 2"
@@ -530,6 +532,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_CodecFamilyVideo "Семейство видео кодеков"
 #define MSGTR_GUI_CodecsAndLibraries "Кодеки и сторонние библиотеки"
 #define MSGTR_GUI_Coefficient "Коэффициент"
+#define MSGTR_GUI_ConfigFileError "ошибка в конфигурационном файле\n"
 #define MSGTR_GUI_Configure "Настроить"
 #define MSGTR_GUI_ConfigureDriver "Настроить драйвер"
 #define MSGTR_GUI_Contrast "Контраст"
@@ -595,16 +598,17 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Hue "Цвет"
 #define MSGTR_GUI_Lavc "Использовать LAVC (FFmpeg)"
 #define MSGTR_GUI_MaximumUsageSpareCPU "Авто качество"
+#define MSGTR_GUI_MemAllocFailed MSGTR_MemAllocFailed
 #define MSGTR_GUI_Miscellaneous "Разное"
 #define MSGTR_GUI_Mixer "Микшер"
 #define MSGTR_GUI_MixerChannel "Канал микшера"
 #define MSGTR_GUI_MSG_AddingVideoFilter "[GUI] Добавляю видеофильтр: %s\n"
 #define MSGTR_GUI_MSG_ColorDepthTooLow "Извините, глубина цвета слишком мала.\n"
 #define MSGTR_GUI_MSG_DragAndDropNothing "D&D: Ничего не возвращено!\n"
-#define MSGTR_GUI_MSG_DXR3NeedsLavc "Извините, Вы не можете проигрывать не-MPEG файлы на Вашем DXR3/H+ устройстве\nбез перекодирования. Пожалуйста, включите lavc при конфигурации DXR3/H+."
+#define MSGTR_GUI_MSG_DXR3NeedsLavc "Извините, Вы не можете проигрывать не-MPEG файлы на Вашем DXR3/H+ устройстве\nбез перекодирования. Пожалуйста, включите lavc при конфигурации DXR3/H+.\n"
 #define MSGTR_GUI_MSG_LoadingSubtitle "[GUI] Загружаю субтитры: %s\n"
 #define MSGTR_GUI_MSG_MemoryErrorImage "Извините, недостаточно памяти для буфера прорисовки.\n"
-#define MSGTR_GUI_MSG_MemoryErrorWindow "Извините, не хватает памяти для буфера прорисовки."
+#define MSGTR_GUI_MSG_MemoryErrorWindow "Извините, не хватает памяти для буфера прорисовки.\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "Файл не загружен."
 #define MSGTR_GUI_MSG_NoMediaOpened "Носитель не открыт."
 #define MSGTR_GUI_MSG_NotAFile0 "Это не похоже на файл...\n"
@@ -630,7 +634,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_MSG_SkinUnknownParameter "неизвестный параметр (%s)\n"
 #define MSGTR_GUI_MSG_TooManyWindows "Слишком много открытых окон.\n"
 #define MSGTR_GUI_MSG_UnableToSaveOption "[cfg] Не могу сохранить опцию '%s'.\n"
-#define MSGTR_GUI_MSG_VideoOutError "Извините, не нашёл совместимый с GUI драйвер видео вывода."
+#define MSGTR_GUI_MSG_VideoOutError "Извините, не нашёл совместимый с GUI драйвер видео вывода.\n"
 #define MSGTR_GUI_MSG_XShapeError "Извините, ваша система не поддерживает расширение XShape.\n"
 #define MSGTR_GUI_MSG_XSharedMemoryError "ошибка расширения разделяемой памяти\n"
 #define MSGTR_GUI_MSG_XSharedMemoryUnavailable "Извините, ваша система не поддерживает расширение разделяемой памяти X'ов.\n"
@@ -702,6 +706,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Video "Видео"
 #define MSGTR_GUI_VideoEncoder "Видео кодировщик"
 #define MSGTR_GUI_VideoTracks "Видео дорожка"
+#define MSGTR_GUI_Volume MSGTR_Volume
 #define MSGTR_GUI_Warning "Предупреждение!"
 
 // ======================= video output drivers ========================

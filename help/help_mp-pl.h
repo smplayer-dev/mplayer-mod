@@ -632,6 +632,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "Pamięć podręczna"
 #define MSGTR_GUI_CacheSize "Wielkość pamięci podręcznej"
 #define MSGTR_GUI_Cancel "Anuluj"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_Center "Centralny"
 #define MSGTR_GUI_Channel1 "Kanał 1"
 #define MSGTR_GUI_Channel2 "Kanał 2"
@@ -648,6 +650,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_CodecFamilyVideo "Rodzina kodeków video"
 #define MSGTR_GUI_CodecsAndLibraries "Kodeki i inne obce biblioteki"
 #define MSGTR_GUI_Coefficient "Współczynnik"
+#define MSGTR_GUI_ConfigFileError "błąd pliku konfiguracyjnego\n"
 #define MSGTR_GUI_Configure "Konfiguracja"
 #define MSGTR_GUI_ConfigureDriver "Skonfiguruj sterownik"
 #define MSGTR_GUI_Contrast "Kontrast"
@@ -712,16 +715,17 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Hue "Barwa"
 #define MSGTR_GUI_Lavc "Użyj LAVC (FFmpeg)"
 #define MSGTR_GUI_MaximumUsageSpareCPU "Jakość automatyczna"
+#define MSGTR_GUI_MemAllocFailed MSGTR_MemAllocFailed
 #define MSGTR_GUI_Miscellaneous "Inne"
 #define MSGTR_GUI_Mixer "Mixer"
 #define MSGTR_GUI_MixerChannel "Kanał Mixera"
 #define MSGTR_GUI_MSG_AddingVideoFilter "[GUI] Dodaję filtr video: %s\n"
 #define MSGTR_GUI_MSG_ColorDepthTooLow "Niestety paleta kolorów jest za mała.\n"
 #define MSGTR_GUI_MSG_DragAndDropNothing "D&D: Nic nie zwrócono!\n"
-#define MSGTR_GUI_MSG_DXR3NeedsLavc "Niestety, nie można odtwarzać plików innych niż MPEG przy użyciu urządzenia DXR3/H+ bez kowersji.\nProszę włączyć lavc w polu sterowania DXR3/H+."
+#define MSGTR_GUI_MSG_DXR3NeedsLavc "Niestety, nie można odtwarzać plików innych niż MPEG przy użyciu urządzenia DXR3/H+ bez kowersji.\nProszę włączyć lavc w polu sterowania DXR3/H+.\n"
 #define MSGTR_GUI_MSG_LoadingSubtitle "[GUI] Wczytuję napisy: %s\n"
 #define MSGTR_GUI_MSG_MemoryErrorImage "Za mało pamięci do wyrysowania bufora.\n"
-#define MSGTR_GUI_MSG_MemoryErrorWindow "Za mało pamięci by wyrysować bufor."
+#define MSGTR_GUI_MSG_MemoryErrorWindow "Za mało pamięci by wyrysować bufor.\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "Nie wczytano pliku."
 #define MSGTR_GUI_MSG_NoMediaOpened "Nie otwarto żadnego nośnika."
 #define MSGTR_GUI_MSG_NotAFile0 "To nie wygląda jak plik...\n"
@@ -747,7 +751,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_MSG_SkinUnknownParameter "nieznany parametr (%s)\n"
 #define MSGTR_GUI_MSG_TooManyWindows "Za dużo otwartych okien.\n"
 #define MSGTR_GUI_MSG_UnableToSaveOption "[cfg] Nie udało się zapisać opcji '%s'.\n"
-#define MSGTR_GUI_MSG_VideoOutError "Brak sterownika video zgodnego z GUI."
+#define MSGTR_GUI_MSG_VideoOutError "Brak sterownika video zgodnego z GUI.\n"
 #define MSGTR_GUI_MSG_XShapeError "Niestety Twój system nie obsługuje rozszerzenia XShape.\n"
 #define MSGTR_GUI_MSG_XSharedMemoryError "błąd rozszerzenia pamięci dzielonej\n"
 #define MSGTR_GUI_MSG_XSharedMemoryUnavailable "Niestety Twój system nie obsługuje rozszerzeń dzielonej pamięci X.\n"
@@ -819,6 +823,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Video "Wideo"
 #define MSGTR_GUI_VideoEncoder "Koder video"
 #define MSGTR_GUI_VideoTracks "Ścieżka Wideo"
+#define MSGTR_GUI_Volume MSGTR_Volume
 #define MSGTR_GUI_Warning "Uwaga!"
 
 // ======================= VO Video Output drivers ========================

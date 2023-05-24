@@ -339,6 +339,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "Cache"
 #define MSGTR_GUI_CacheSize "Μέγεθος της cache"
 #define MSGTR_GUI_Cancel "Άκυρο"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_Center "Κέντρο"
 #define MSGTR_GUI_Channel1 "Κανάλι 1"
 #define MSGTR_GUI_Channel2 "Κανάλι 2"
@@ -413,8 +415,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Lavc "Χρήση του LAVC (FFmpeg)"
 #define MSGTR_GUI_MaximumUsageSpareCPU "Αυτόματη ποιότητα"
 #define MSGTR_GUI_Miscellaneous "Διάφορα"
-#define MSGTR_GUI_MSG_DXR3NeedsLavc "Λυπάμαι, δεν μπορείτε να αναπαράγετε αρχεία που δεν είναι mpeg με τη συσκευή DXR3/H+ χωρίς επανακωδικοποίηση.\n Παρακαλώ ενεργοποιήστε lavc στο DXR3/H+ κουτί-διαλόγου."
-#define MSGTR_GUI_MSG_MemoryErrorWindow "Λυπάμαι, δεν υπάρχει αρκετή μνήμη για εγγραφή  στον buffer."
+#define MSGTR_GUI_MSG_DXR3NeedsLavc "Λυπάμαι, δεν μπορείτε να αναπαράγετε αρχεία που δεν είναι mpeg με τη συσκευή DXR3/H+ χωρίς επανακωδικοποίηση.\n Παρακαλώ ενεργοποιήστε lavc στο DXR3/H+ κουτί-διαλόγου.\n"
+#define MSGTR_GUI_MSG_MemoryErrorWindow "Λυπάμαι, δεν υπάρχει αρκετή μνήμη για εγγραφή  στον buffer.\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "δεν φορτώθηκε αρχείο"
 #define MSGTR_GUI_MSG_NoMediaOpened "Δεν φορτώθηκαν αρχεία"
 #define MSGTR_GUI_MSG_PlaybackNeedsRestart "Προσοχή, μερικές λειτουργίες χρειάζονται επανεκκίνιση αναπαραγωγής."
@@ -431,7 +433,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_MSG_SkinTooManyFonts "πολλαπλές ορισμένες γραμματοσειρές\n"
 #define MSGTR_GUI_MSG_SkinUnknownMessage "μη αναγνωρίσιμο μήνυμα: %s\n"
 #define MSGTR_GUI_MSG_SkinUnknownParameter "μη αναγνωρίσιμη παράμετρος (%s)\n"
-#define MSGTR_GUI_MSG_VideoOutError "Λυπάμαι, δεν βρέθηκε οδηγός εξόδου βίντεο που να είναι συμβατός με το GUI."
+#define MSGTR_GUI_MSG_VideoOutError "Λυπάμαι, δεν βρέθηκε οδηγός εξόδου βίντεο που να είναι συμβατός με το GUI.\n"
 #define MSGTR_GUI_Mute "Απενεργοποίηση ήχου"
 #define MSGTR_GUI_NetworkStreaming "Streaming δικτύου."
 #define MSGTR_GUI_Next "Επόμενο κανάλι"

@@ -76,7 +76,9 @@ static av_cold int vmdaudio_decode_init(AVCodecContext *avctx)
         av_log(avctx, AV_LOG_ERROR, "invalid number of channels\n");
         return AVERROR(EINVAL);
     }
-    if (avctx->block_align < 1 || avctx->block_align % avctx->channels) {
+    if (avctx->block_align < 1 || avctx->block_align % avctx->channels ||
+        avctx->block_align > INT_MAX - avctx->channels
+    ) {
         av_log(avctx, AV_LOG_ERROR, "invalid block align\n");
         return AVERROR(EINVAL);
     }
@@ -179,6 +181,9 @@ static int vmdaudio_decode_frame(AVCodecContext *avctx, void *data,
     /* drop incomplete chunks */
     buf_size     = audio_chunks * s->chunk_size;
 
+    if (silent_chunks + audio_chunks >= INT_MAX / avctx->block_align)
+        return AVERROR_INVALIDDATA;
+
     /* get output buffer */
     frame->nb_samples = ((silent_chunks + audio_chunks) * avctx->block_align) /
                         avctx->channels;
@@ -223,7 +228,7 @@ static int vmdaudio_decode_frame(AVCodecContext *avctx, void *data,
     return avpkt->size;
 }
 
-AVCodec ff_vmdaudio_decoder = {
+const AVCodec ff_vmdaudio_decoder = {
     .name           = "vmdaudio",
     .long_name      = NULL_IF_CONFIG_SMALL("Sierra VMD audio"),
     .type           = AVMEDIA_TYPE_AUDIO,
@@ -232,4 +237,5 @@ AVCodec ff_vmdaudio_decoder = {
     .init           = vmdaudio_decode_init,
     .decode         = vmdaudio_decode_frame,
     .capabilities   = AV_CODEC_CAP_DR1,
+    .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

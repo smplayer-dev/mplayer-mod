@@ -25,12 +25,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <strings.h>
 #include <time.h>
 #include <unistd.h>
 #include <assert.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 #include <sys/types.h>
 
 #if defined(__MINGW32__) || defined(__CYGWIN__)
@@ -124,8 +122,6 @@
 #include "sub/subreader.h"
 #include "sub/vobsub.h"
 #include "sub/eosd.h"
-#include "osdep/getch2.h"
-#include "osdep/timer.h"
 
 #include "udp_sync.h"
 
@@ -429,7 +425,7 @@ static char *get_demuxer_info(char *tag)
         return NULL;
 
     for (n = 0; info[2 * n] != NULL; n++)
-        if (!strcasecmp(info[2 * n], tag))
+        if (!av_strcasecmp(info[2 * n], tag))
             break;
 
     return info[2 * n + 1] ? strdup(info[2 * n + 1]) : NULL;
@@ -891,7 +887,7 @@ static void parse_cfgfiles(m_config_t *conf)
 static void load_per_protocol_config(m_config_t *conf, const char *const file)
 {
     char *str;
-    char protocol[strlen(PROFILE_CFG_PROTOCOL) + strlen(file) + 1];
+    char *protocol;
     m_profile_t *p;
 
     /* does filename actually uses a protocol ? */
@@ -899,13 +895,14 @@ static void load_per_protocol_config(m_config_t *conf, const char *const file)
     if (!str)
         return;
 
-    sprintf(protocol, "%s%s", PROFILE_CFG_PROTOCOL, file);
-    protocol[strlen(PROFILE_CFG_PROTOCOL) + strlen(file) - strlen(str)] = '\0';
+    protocol = av_asprintf("%s%s", PROFILE_CFG_PROTOCOL, file);
+    *strstr(protocol, "://") = 0;
     p = m_config_get_profile(conf, protocol);
     if (p) {
         mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_LoadingProtocolProfile, protocol);
         m_config_set_profile(conf, p);
     }
+    av_freep(&protocol);
 }
 
 #define PROFILE_CFG_EXTENSION "extension."
@@ -913,7 +910,7 @@ static void load_per_protocol_config(m_config_t *conf, const char *const file)
 static void load_per_extension_config(m_config_t *conf, const char *const file)
 {
     char *str;
-    char extension[strlen(PROFILE_CFG_EXTENSION) + 8];
+    char extension[sizeof(PROFILE_CFG_EXTENSION) + 7];
     m_profile_t *p;
 
     /* does filename actually have an extension ? */
@@ -921,8 +918,7 @@ static void load_per_extension_config(m_config_t *conf, const char *const file)
     if (!str)
         return;
 
-    sprintf(extension, PROFILE_CFG_EXTENSION);
-    strncat(extension, ++str, 7);
+    snprintf(extension, sizeof(extension), "%s%s", PROFILE_CFG_EXTENSION, ++str);
     p = m_config_get_profile(conf, extension);
     if (p) {
         mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_LoadingExtensionProfile, extension);
@@ -935,15 +931,15 @@ static void load_per_extension_config(m_config_t *conf, const char *const file)
 
 static void load_per_output_config(m_config_t *conf, char *cfg, char *out)
 {
-    char profile[strlen(cfg) + strlen(out) + 1];
     m_profile_t *p;
 
-    sprintf(profile, "%s%s", cfg, out);
+    char *profile = av_asprintf("%s%s", cfg, out);
     p = m_config_get_profile(conf, profile);
     if (p) {
         mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_LoadingExtensionProfile, profile);
         m_config_set_profile(conf, p);
     }
+    av_freep(&profile);
 }
 
 /**
@@ -2434,7 +2430,7 @@ int reinit_video_chain(void)
     return 1;
 
 err_out:
-    mpctx->sh_video = mpctx->d_video->sh = NULL;
+    mpctx->sh_video = mpctx->sh_video->ds = NULL;
     return 0;
 }
 
@@ -3281,12 +3277,12 @@ play_next_file:
     if (stream_dump_type == 5) {
         unsigned char buf[4096];
         int len;
-        FILE *f;
+        stream_t *os;
         current_module = "dumpstream";
         stream_reset(mpctx->stream);
         stream_seek(mpctx->stream, mpctx->stream->start_pos);
-        f = fopen(stream_dump_name, "wb");
-        if (!f) {
+        os = open_output_stream(stream_dump_name, NULL);
+        if (!os) {
             mp_msg(MSGT_CPLAYER, MSGL_FATAL, MSGTR_CantOpenDumpfile);
             exit_player(EXIT_ERROR);
         }
@@ -3303,7 +3299,7 @@ play_next_file:
                 break;
             len = stream_read(mpctx->stream, buf, 4096);
             if (len > 0) {
-                if (fwrite(buf, len, 1, f) != 1) {
+                if (stream_write_buffer(os, buf, len) != len) {
                     mp_msg(MSGT_MENCODER, MSGL_FATAL, MSGTR_ErrorWritingFile, stream_dump_name);
                     exit_player(EXIT_ERROR);
                 }
@@ -3316,7 +3312,7 @@ play_next_file:
                     break;
             }
         }
-        if (fclose(f)) {
+        if (free_stream(os)) {
             mp_msg(MSGT_MENCODER, MSGL_FATAL, MSGTR_ErrorWritingFile, stream_dump_name);
             exit_player(EXIT_ERROR);
         }
@@ -3484,7 +3480,7 @@ goto_enable_cache:
 
     // DUMP STREAMS:
     if ((stream_dump_type) && (stream_dump_type < 4)) {
-        FILE *f;
+        stream_t *os;
         demux_stream_t *ds = NULL;
         current_module = "dump";
         // select stream to dump
@@ -3513,8 +3509,8 @@ goto_enable_cache:
             mpctx->d_sub->id = -2;
         }
         // let's dump it!
-        f = fopen(stream_dump_name, "wb");
-        if (!f) {
+        os = open_output_stream(stream_dump_name, NULL);
+        if (!os) {
             mp_msg(MSGT_CPLAYER, MSGL_FATAL, MSGTR_CantOpenDumpfile);
             exit_player(EXIT_ERROR);
         }
@@ -3531,9 +3527,9 @@ goto_enable_cache:
                 break;
             if ((mpctx->demuxer->file_format == DEMUXER_TYPE_AVI || mpctx->demuxer->file_format == DEMUXER_TYPE_ASF || mpctx->demuxer->file_format == DEMUXER_TYPE_MOV)
                 && stream_dump_type == 2)
-                fwrite(&in_size, 1, 4, f);
+                stream_write_buffer(os, &in_size, 4);
             if (in_size > 0) {
-                fwrite(start, in_size, 1, f);
+                stream_write_buffer(os, start, in_size);
                 stream_dump_progress(in_size, mpctx->stream);
             }
             if (dvd_last_chapter > 0) {
@@ -3542,7 +3538,7 @@ goto_enable_cache:
                     break;
             }
         }
-        fclose(f);
+        free_stream(os);
         stream_dump_progress_end();
         mp_msg(MSGT_CPLAYER, MSGL_INFO, MSGTR_CoreDumped);
         exit_player_with_rc(EXIT_EOF, 0);

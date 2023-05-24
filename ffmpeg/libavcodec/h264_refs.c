@@ -28,7 +28,6 @@
 #include <inttypes.h>
 
 #include "libavutil/avassert.h"
-#include "internal.h"
 #include "avcodec.h"
 #include "h264.h"
 #include "h264dec.h"
@@ -373,9 +372,11 @@ int ff_h264_build_ref_list(H264Context *h, H264SliceContext *sl)
                 av_assert0(0);
             }
 
-            if (i < 0) {
+            if (i < 0 || mismatches_ref(h, ref)) {
                 av_log(h->avctx, AV_LOG_ERROR,
-                       "reference picture missing during reorder\n");
+                       i < 0 ? "reference picture missing during reorder\n" :
+                               "mismatching reference\n"
+                      );
                 memset(&sl->ref_list[list][index], 0, sizeof(sl->ref_list[0][0])); // FIXME
             } else {
                 for (i = index; i + 1 < sl->ref_count[list]; i++) {
@@ -727,10 +728,10 @@ int ff_h264_execute_ref_pic_marking(H264Context *h)
             h->poc.frame_num = h->cur_pic_ptr->frame_num = 0;
             h->mmco_reset = 1;
             h->cur_pic_ptr->mmco_reset = 1;
-            for (j = 0; j < MAX_DELAYED_PIC_COUNT; j++)
+            for (j = 0; j < FF_ARRAY_ELEMS(h->last_pocs); j++)
                 h->last_pocs[j] = INT_MIN;
             break;
-        default: assert(0);
+        default: av_assert0(0);
         }
     }
 
@@ -847,7 +848,7 @@ int ff_h264_decode_ref_pic_marking(H264SliceContext *sl, GetBitContext *gb,
     } else {
         sl->explicit_ref_marking = get_bits1(gb);
         if (sl->explicit_ref_marking) {
-            for (i = 0; i < MAX_MMCO_COUNT; i++) {
+            for (i = 0; i < FF_ARRAY_ELEMS(sl->mmco); i++) {
                 MMCOOpcode opcode = get_ue_golomb_31(gb);
 
                 mmco[i].opcode = opcode;
@@ -866,6 +867,7 @@ int ff_h264_decode_ref_pic_marking(H264SliceContext *sl, GetBitContext *gb,
                         av_log(logctx, AV_LOG_ERROR,
                                "illegal long ref in memory management control "
                                "operation %d\n", opcode);
+                        sl->nb_mmco = i;
                         return -1;
                     }
                     mmco[i].long_arg = long_arg;
@@ -875,6 +877,7 @@ int ff_h264_decode_ref_pic_marking(H264SliceContext *sl, GetBitContext *gb,
                     av_log(logctx, AV_LOG_ERROR,
                            "illegal memory management control operation %d\n",
                            opcode);
+                    sl->nb_mmco = i;
                     return -1;
                 }
                 if (opcode == MMCO_END)

@@ -125,7 +125,6 @@ static int vble_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     int offset = 0;
     int width_uv = avctx->width / 2, height_uv = avctx->height / 2;
     int ret;
-    ThreadFrame frame = { .f = data };
 
     if (avpkt->size < 4 || avpkt->size - 4 > INT_MAX/8) {
         av_log(avctx, AV_LOG_ERROR, "Invalid packet size\n");
@@ -133,7 +132,7 @@ static int vble_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     }
 
     /* Allocate buffer */
-    if ((ret = ff_thread_get_buffer(avctx, &frame, 0)) < 0)
+    if ((ret = ff_thread_get_buffer(avctx, pic, 0)) < 0)
         return ret;
 
     /* Set flags */
@@ -197,14 +196,13 @@ static av_cold int vble_decode_init(AVCodecContext *avctx)
 
     if (!ctx->val) {
         av_log(avctx, AV_LOG_ERROR, "Could not allocate values buffer.\n");
-        vble_decode_close(avctx);
         return AVERROR(ENOMEM);
     }
 
     return 0;
 }
 
-AVCodec ff_vble_decoder = {
+const AVCodec ff_vble_decoder = {
     .name           = "vble",
     .long_name      = NULL_IF_CONFIG_SMALL("VBLE Lossless Codec"),
     .type           = AVMEDIA_TYPE_VIDEO,
@@ -214,6 +212,5 @@ AVCodec ff_vble_decoder = {
     .close          = vble_decode_close,
     .decode         = vble_decode_frame,
     .capabilities   = AV_CODEC_CAP_DR1 | AV_CODEC_CAP_FRAME_THREADS,
-    .init_thread_copy = ONLY_IF_THREADS_ENABLED(vble_decode_init),
     .caps_internal  = FF_CODEC_CAP_INIT_THREADSAFE,
 };

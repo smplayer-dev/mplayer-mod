@@ -13,6 +13,10 @@ is16BPS:
   gray16le
   p016be
   p016le
+  p216be
+  p216le
+  p416be
+  p416le
   rgb48be
   rgb48le
   rgba64be
@@ -57,8 +61,18 @@ isNBPS:
   nv20le
   p010be
   p010le
+  p210be
+  p210le
+  p410be
+  p410le
+  x2bgr10be
+  x2bgr10le
+  x2rgb10be
+  x2rgb10le
   xyz12be
   xyz12le
+  y210be
+  y210le
   yuv420p10be
   yuv420p10le
   yuv420p12be
@@ -134,12 +148,19 @@ isBE:
   nv20be
   p010be
   p016be
+  p210be
+  p216be
+  p410be
+  p416be
   rgb444be
   rgb48be
   rgb555be
   rgb565be
   rgba64be
+  x2bgr10be
+  x2rgb10be
   xyz12be
+  y210be
   ya16be
   yuv420p10be
   yuv420p12be
@@ -178,14 +199,26 @@ isYUV:
   nv20be
   nv20le
   nv21
+  nv24
+  nv42
   p010be
   p010le
   p016be
   p016le
+  p210be
+  p210le
+  p216be
+  p216le
+  p410be
+  p410le
+  p416be
+  p416le
   uyvy422
   uyyvyy411
   xyz12be
   xyz12le
+  y210be
+  y210le
   ya16be
   ya16le
   ya8
@@ -268,10 +301,20 @@ isPlanarYUV:
   nv20be
   nv20le
   nv21
+  nv24
+  nv42
   p010be
   p010le
   p016be
   p016le
+  p210be
+  p210le
+  p216be
+  p216le
+  p410be
+  p410le
+  p416be
+  p416le
   yuv410p
   yuv411p
   yuv420p
@@ -342,6 +385,27 @@ isPlanarYUV:
   yuvj422p
   yuvj440p
   yuvj444p
+
+isSemiPlanarYUV:
+  nv12
+  nv16
+  nv20be
+  nv20le
+  nv21
+  nv24
+  nv42
+  p010be
+  p010le
+  p016be
+  p016le
+  p210be
+  p210le
+  p216be
+  p216le
+  p410be
+  p410le
+  p416be
+  p416le
 
 isRGB:
   0bgr
@@ -414,6 +478,10 @@ isRGB:
   rgb8
   rgba64be
   rgba64le
+  x2bgr10be
+  x2bgr10le
+  x2rgb10be
+  x2rgb10le
 
 Gray:
   gray
@@ -560,6 +628,10 @@ AnyRGB:
   rgb8
   rgba64be
   rgba64le
+  x2bgr10be
+  x2bgr10le
+  x2rgb10be
+  x2rgb10le
 
 ALPHA:
   ayuv64be
@@ -667,8 +739,14 @@ Packed:
   rgba64le
   uyvy422
   uyyvyy411
+  x2bgr10be
+  x2bgr10le
+  x2rgb10be
+  x2rgb10le
   xyz12be
   xyz12le
+  y210be
+  y210le
   ya16be
   ya16le
   ya8
@@ -703,10 +781,20 @@ Planar:
   nv20be
   nv20le
   nv21
+  nv24
+  nv42
   p010be
   p010le
   p016be
   p016le
+  p210be
+  p210le
+  p216be
+  p216le
+  p410be
+  p410le
+  p416be
+  p416le
   yuv410p
   yuv411p
   yuv420p
@@ -827,6 +915,10 @@ PackedRGB:
   rgb8
   rgba64be
   rgba64le
+  x2bgr10be
+  x2bgr10le
+  x2rgb10be
+  x2rgb10le
 
 PlanarRGB:
   gbrap
@@ -859,4 +951,21 @@ usePal:
   pal8
   rgb4_byte
   rgb8
+
+DataInHighBits:
+  p010be
+  p010le
+  p210be
+  p210le
+  p410be
+  p410le
+  xyz12be
+  xyz12le
+  y210be
+  y210le
+
+SwappedChroma:
+  nv21
+  nv42
+  yvyu422
 

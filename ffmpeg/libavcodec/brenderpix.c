@@ -204,6 +204,10 @@ static int pix_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
         avpriv_request_sample(avctx, "Format %d", hdr.format);
         return AVERROR_PATCHWELCOME;
     }
+    bytes_per_scanline = bytes_pp * hdr.width;
+
+    if (bytestream2_get_bytes_left(&gb) < hdr.height * bytes_per_scanline)
+        return AVERROR_INVALIDDATA;
 
     if ((ret = ff_set_dimensions(avctx, hdr.width, hdr.height)) < 0)
         return ret;
@@ -261,7 +265,6 @@ static int pix_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     bytestream2_skip(&gb, 8);
 
     // read the image data to the buffer
-    bytes_per_scanline = bytes_pp * hdr.width;
     bytes_left = bytestream2_get_bytes_left(&gb);
 
     if (chunk_type != IMAGE_DATA_CHUNK || data_len != bytes_left ||
@@ -282,7 +285,7 @@ static int pix_decode_frame(AVCodecContext *avctx, void *data, int *got_frame,
     return avpkt->size;
 }
 
-AVCodec ff_brender_pix_decoder = {
+const AVCodec ff_brender_pix_decoder = {
     .name         = "brender_pix",
     .long_name    = NULL_IF_CONFIG_SMALL("BRender PIX image"),
     .type         = AVMEDIA_TYPE_VIDEO,

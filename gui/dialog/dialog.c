@@ -42,6 +42,7 @@
 #include "help_mp.h"
 #include "mp_msg.h"
 #include "libavutil/intreadwrite.h"
+#include "osdep/timer.h"
 
 #define THRESHOLD 128   // transparency values equal to or above this will become
                         // opaque, all values below this will become transparent
@@ -96,7 +97,7 @@ static int gtkLoadIcon(GtkIconTheme *theme, gint size, GdkPixmap **gdkIcon, GdkB
 
         g_object_unref(pixbuf);
     } else
-        mp_msg(MSGT_GPLAYER, MSGL_WARN, MSGTR_GUI_MSG_IconError, guiIconName, size);
+        mp_msg(MSGT_GPLAYER, MSGL_WARN, _(MSGTR_GUI_MSG_IconError), guiIconName, size);
 
     /* start up GTK which realizes the pixmaps */
     gtk_main_iteration_do(FALSE);
@@ -132,7 +133,7 @@ void gtkInit(char *display_name)
     env = getenv("G_FILENAME_ENCODING");
 
     if ((!env && getenv("G_BROKEN_FILENAMES")) || (gstrncmp(env, "@locale", 7) == 0))
-        mp_msg(MSGT_GPLAYER, MSGL_WARN, MSGTR_GUI_MSG_LocaleEncoding);
+        mp_msg(MSGT_GPLAYER, MSGL_WARN, _(MSGTR_GUI_MSG_LocaleEncoding));
 
     gtk_init(&argc, &argv);
     wsSetErrorHandler();      // GDK has just set its own handler
@@ -183,37 +184,38 @@ void gtkMessageBox(int type, const gchar *str)
     ShowMessageBox(str);
     gtk_label_set_text(GTK_LABEL(gtkMessageBoxText), str);
 
-    /* enable linewrapping by alex */
-// GTK_LABEL(gtkMessageBoxText)->max_width = 80;
-    if (strlen(str) > 80)
+    if (strlen(str) > 80) {
         gtk_label_set_line_wrap(GTK_LABEL(gtkMessageBoxText), TRUE);
-    else
+        gtk_label_set_justify(GTK_LABEL(gtkMessageBoxText), GTK_JUSTIFY_LEFT);
+        gtk_widget_set_size_request(gtkMessageBoxText, 415, -1);
+    } else
         gtk_label_set_line_wrap(GTK_LABEL(gtkMessageBoxText), FALSE);
 
-    switch (type) {
+    switch (type & ~MSGBOX_WAIT) {
     case MSGBOX_FATAL:
-        gtk_window_set_title(GTK_WINDOW(MessageBox), MSGTR_GUI_ErrorFatal);
+        gtk_window_set_title(GTK_WINDOW(MessageBox), _(MSGTR_GUI_ErrorFatal));
         gtk_widget_hide(InformationImage);
         gtk_widget_hide(WarningImage);
         gtk_widget_show(ErrorImage);
+        type |= MSGBOX_WAIT;
         break;
 
     case MSGBOX_ERROR:
-        gtk_window_set_title(GTK_WINDOW(MessageBox), MSGTR_GUI_Error);
+        gtk_window_set_title(GTK_WINDOW(MessageBox), _(MSGTR_GUI_Error));
         gtk_widget_hide(InformationImage);
         gtk_widget_hide(WarningImage);
         gtk_widget_show(ErrorImage);
         break;
 
     case MSGBOX_WARNING:
-        gtk_window_set_title(GTK_WINDOW(MessageBox), MSGTR_GUI_Warning);
+        gtk_window_set_title(GTK_WINDOW(MessageBox), _(MSGTR_GUI_Warning));
         gtk_widget_hide(InformationImage);
         gtk_widget_show(WarningImage);
         gtk_widget_hide(ErrorImage);
         break;
 
     case MSGBOX_INFORMATION:
-        gtk_window_set_title(GTK_WINDOW(MessageBox), MSGTR_GUI_Information);
+        gtk_window_set_title(GTK_WINDOW(MessageBox), _(MSGTR_GUI_Information));
         gtk_widget_show(InformationImage);
         gtk_widget_hide(WarningImage);
         gtk_widget_hide(ErrorImage);
@@ -223,9 +225,12 @@ void gtkMessageBox(int type, const gchar *str)
     gtk_widget_show(MessageBox);
     gtkSetLayer(MessageBox);
 
-    if (type == MSGBOX_FATAL)
-        while (MessageBox)
-            gtk_main_iteration_do(0);
+    if (type & MSGBOX_WAIT) {
+        while (MessageBox) {
+            gtk_main_iteration_do(FALSE);
+            usec_sleep(5000);
+        }
+    }
 }
 
 /**
@@ -273,11 +278,10 @@ void gtkShow(int type, char *param)
             FillSkinList(sbSkinDirInData)) {
             gtkSelectInCList(SkinList, param);
             gtk_clist_sort(GTK_CLIST(SkinList));
-            gtk_widget_show(SkinBrowser);
             gtkSetLayer(SkinBrowser);
         } else {
             gtk_widget_destroy(SkinBrowser);
-            gtkMessageBox(MSGBOX_ERROR, MSGTR_GUI_MSG_SkinDirNotFound);
+            gtkMessageBox(MSGBOX_ERROR, _(MSGTR_GUI_MSG_SkinDirNotFound));
         }
 
         break;

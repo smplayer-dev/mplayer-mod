@@ -197,7 +197,7 @@ static const vf_info_t* const filter_list[]={
     &vf_info_hue,
 #ifdef CONFIG_FFMPEG_A
     &vf_info_spp,
-    &vf_info_uspp,
+//    &vf_info_uspp, // TODO: does not currently build
     &vf_info_fspp,
     &vf_info_qp,
 //    &vf_info_mcdeint, //TODO: vf_mcdeint is deactivated because it doesn't build after latest FFmpeg major bumps
@@ -513,12 +513,13 @@ vf_instance_t* vf_open_filter(vf_instance_t* next, const char *name, char **args
       l += 1 + strlen(args[2*i]) + 1 + strlen(args[2*i+1]);
     l += strlen(name);
     {
-      char str[l+1];
+      char *str = malloc(l+1);
       char* p = str;
       p += sprintf(str,"%s",name);
       for(i = 0 ; args && args[2*i] ; i++)
         p += sprintf(p," %s=%s",args[2*i],args[2*i+1]);
       mp_msg(MSGT_VFILTER,MSGL_INFO,MSGTR_OpeningVideoFilter "[%s]\n",str);
+      free(str);
     }
   } else if(strcmp(name,"vo")) {
     if(args && strcmp(args[0],"_oldargs_") == 0)

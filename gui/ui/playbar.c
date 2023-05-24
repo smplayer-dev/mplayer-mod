@@ -47,6 +47,7 @@
 #include "libmpdemux/demuxer.h"
 #include "libmpdemux/stheader.h"
 #include "codec-cfg.h"
+#include "libavutil/avstring.h"
 
 #include "ui.h"
 #include "actions.h"
@@ -286,14 +287,17 @@ void uiPlaybarInit( void )
 
  if ( ( playbarDrawBuffer = malloc( guiApp.playbar.Bitmap.ImageSize ) ) == NULL )
   {
-   gmp_msg( MSGT_GPLAYER,MSGL_FATAL,"[playbar] " MSGTR_GUI_MSG_MemoryErrorWindow );
+   char msg[80] = "[playbar] ";
+
+   av_strlcat( msg, _(MSGTR_GUI_MSG_MemoryErrorWindow), sizeof(msg) );
+   gmp_msg( MSGT_GPLAYER, MSGL_FATAL, msg );
    mplayer( MPLAYER_EXIT_GUI, EXIT_ERROR, 0 );
   }
 
  guiApp.playbarWindow.Parent=guiApp.videoWindow.WindowID;
  wsWindowCreate( &guiApp.playbarWindow,
    guiApp.playbar.x,guiApp.playbar.y,guiApp.playbar.width,guiApp.playbar.height,
-   wsHideFrame|wsHideWindow,wsShowMouseCursor|wsHandleMouseButton|wsHandleMouseMove,"PlayBar" );
+   wsHideFrame|wsHideWindow,wsShowMouseCursor|wsHandleMouseButton|wsHandleMouseMove,MPlayer" - PlayBar" );
 
  mp_msg( MSGT_GPLAYER,MSGL_DBG2,"[playbar] playbarWindow ID: 0x%x\n",(int)guiApp.playbarWindow.WindowID );
 

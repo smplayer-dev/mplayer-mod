@@ -37,6 +37,7 @@
 #include "mp_msg.h"
 #include "help_mp.h"
 #include "stream/stream.h"
+#include "mp_strings.h"
 
 #include "mf.h"
 
@@ -45,26 +46,15 @@ int    mf_h = 0; //288;
 double mf_fps = 25.0;
 char * mf_type = NULL; //"jpg";
 
-mf_t* open_mf(char * filename){
-#if defined(HAVE_GLOB) || defined(__MINGW32__)
- glob_t        gg;
- struct stat   fs;
- int           i;
- char        * fname;
- mf_t        * mf;
- int           error_count = 0;
- int	       count = 0;
 
- mf=calloc( 1,sizeof( mf_t ) );
-
- if( filename[0] == '@' )
-  {
+static int init_mf_from_list_file(mf_t* mf, const char * filename){
    FILE *lst_f=fopen(filename + 1,"r");
    if ( lst_f )
     {
-     fname=malloc(PATH_MAX);
+     char *fname=malloc(PATH_MAX);
      while ( fgets( fname,PATH_MAX,lst_f ) )
       {
+       struct stat fs;
        /* remove spaces from end of fname */
        char *t=fname + strlen( fname ) - 1;
        while ( t > fname && isspace( *t ) ) *(t--)=0;
@@ -82,17 +72,21 @@ mf_t* open_mf(char * filename){
       fclose( lst_f );
 
       mp_msg( MSGT_STREAM,MSGL_INFO,"[mf] number of files: %d\n",mf->nr_of_files );
-      goto exit_mf;
+      free( fname );
+      return 1;
     }
     mp_msg( MSGT_STREAM,MSGL_INFO,"[mf] %s is not indirect filelist\n",filename+1 );
-  }
+    return 0;
+}
 
- if( strchr( filename,',') )
-  {
+
+static int init_mf_from_comma_delimited_paths(mf_t* mf, char * filename){
+   char * fname;
    mp_msg( MSGT_STREAM,MSGL_INFO,"[mf] filelist: %s\n",filename );
 
    while ( ( fname=strsep( &filename,"," ) ) )
     {
+     struct stat fs;
      if ( stat( fname,&fs ) )
       {
        mp_msg( MSGT_STREAM,MSGL_V,"[mf] file not found: '%s'\n",fname );
@@ -106,21 +100,22 @@ mf_t* open_mf(char * filename){
       }
     }
    mp_msg( MSGT_STREAM,MSGL_INFO,"[mf] number of files: %d\n",mf->nr_of_files );
+   return 1;
+}
 
-   goto exit_mf;
-  }
 
- fname=malloc( strlen( filename ) + 32 );
+static int init_mf_from_glob_pattern(mf_t* mf, const char * filename){
+   glob_t gg;
+   char *fname=malloc( strlen( filename ) + 32 );
+   int i;
 
- if ( !strchr( filename,'%' ) )
-  {
    strcpy( fname,filename );
    if ( !strchr( filename,'*' ) ) strcat( fname,"*" );
 
    mp_msg( MSGT_STREAM,MSGL_INFO,"[mf] search expr: %s\n",fname );
 
    if ( glob( fname,0,NULL,&gg ) )
-    { free( mf ); free( fname ); return NULL; }
+    { free( fname ); return 0; }
 
    mf->nr_of_files=gg.gl_pathc;
    mf->names=calloc( gg.gl_pathc, sizeof( char* ) );
@@ -129,38 +124,81 @@ mf_t* open_mf(char * filename){
 
    for( i=0;i < gg.gl_pathc;i++ )
     {
+     struct stat fs;
      if (stat( gg.gl_pathv[i],&fs ) == -1) continue;
      if( S_ISDIR( fs.st_mode ) ) continue;
      mf->names[i]=strdup( gg.gl_pathv[i] );
 //     mp_msg( MSGT_STREAM,MSGL_DBG2,"[mf] added file %d.: %s\n",i,mf->names[i] );
     }
+   free( fname );
    globfree( &gg );
-   goto exit_mf;
-  }
+   return 1;
+}
 
+
+static int init_mf_from_printf_format(mf_t* mf, const char * filename){
+ int count = 0, error_count = 0;
  mp_msg( MSGT_STREAM,MSGL_INFO,"[mf] search expr: %s\n",filename );
 
  while ( error_count < 5 )
   {
-   sprintf( fname,filename,count++ );
+   struct stat fs;
+   char *fname = mp_asprintf( filename,count++ );
+
    if ( stat( fname,&fs ) )
     {
      error_count++;
      mp_msg( MSGT_STREAM,MSGL_V,"[mf] file not found: '%s'\n",fname );
+     free(fname);
     }
     else
     {
      mf->names=realloc( mf->names,( mf->nr_of_files + 1 ) * sizeof( char* ) );
-     mf->names[mf->nr_of_files]=strdup( fname );
+     mf->names[mf->nr_of_files]=fname;
 //     mp_msg( MSGT_STREAM,MSGL_V,"[mf] added file %d.: %s\n",mf->nr_of_files,mf->names[mf->nr_of_files] );
      mf->nr_of_files++;
     }
   }
 
  mp_msg( MSGT_STREAM,MSGL_INFO,"[mf] number of files: %d\n",mf->nr_of_files );
+ return 1;
+}
 
-exit_mf:
- free( fname );
+
+mf_t* open_mf(char * filename){
+#if defined(HAVE_GLOB) || defined(__MINGW32__)
+ mf_t        * mf;
+ int           init_success = 0;
+
+ mf=calloc( 1,sizeof( mf_t ) );
+
+ if( filename[0] == '@' )
+  {
+   init_success = init_mf_from_list_file(mf, filename);
+  }
+
+ if( !init_success )
+  {
+   if( strchr( filename,',') )
+    {
+     init_success = init_mf_from_comma_delimited_paths(mf, filename);
+    }
+   else if ( strchr( filename,'%' ) )
+    {
+     init_success = init_mf_from_printf_format(mf, filename);
+    }
+   else
+    {
+     init_success = init_mf_from_glob_pattern(mf, filename);
+    }
+  }
+
+ if (!init_success)
+  {
+   free(mf);
+   return NULL;
+  }
+
  return mf;
 #else
  mp_msg(MSGT_STREAM,MSGL_FATAL,"[mf] mf support is disabled on your os\n");

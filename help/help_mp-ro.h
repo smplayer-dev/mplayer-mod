@@ -295,6 +295,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "Cache"
 #define MSGTR_GUI_CacheSize "Dimensiune cache"
 #define MSGTR_GUI_Cancel "Anulare"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_Center "Centru"
 #define MSGTR_GUI_Channel1 "Canalul 1"
 #define MSGTR_GUI_Channel2 "Canalul 2"
@@ -369,11 +371,11 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Lavc "Foloseºte LAVC (FFmpeg)"
 #define MSGTR_GUI_MaximumUsageSpareCPU "Calitate auto"
 #define MSGTR_GUI_Miscellaneous "Altele"
-#define MSGTR_GUI_MSG_DXR3NeedsLavc "Scuze, nu poþi afiºa fiºiere ne-MPEG cu dispozitivul DXR3/H+ fãrã recodare.\nActiveazã 'lavc' în cãsuþa de configurare pentru DXR3/H+."
+#define MSGTR_GUI_MSG_DXR3NeedsLavc "Scuze, nu poþi afiºa fiºiere ne-MPEG cu dispozitivul DXR3/H+ fãrã recodare.\nActiveazã 'lavc' în cãsuþa de configurare pentru DXR3/H+.\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "Nici un fiºier încãrcat."
 #define MSGTR_GUI_MSG_NoMediaOpened "Nu e deschis nici un fiºier."
 #define MSGTR_GUI_MSG_PlaybackNeedsRestart "Nu uita cã rularea trebuie repornitã pentru ca unele opþiuni sã-ºi facã efectul!"
-#define MSGTR_GUI_MSG_VideoOutError "Scuze, nu am gãsit un driver video compatibil cu GUI."
+#define MSGTR_GUI_MSG_VideoOutError "Scuze, nu am gãsit un driver video compatibil cu GUI.\n"
 #define MSGTR_GUI_Mute "Fãrã sunet"
 #define MSGTR_GUI_NetworkStreaming "Streaming în reþea..."
 #define MSGTR_GUI_Next "Pista urmãtoare"

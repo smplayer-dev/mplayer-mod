@@ -21,7 +21,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <strings.h>
 #include <assert.h>
 #include <math.h>
 #include <inttypes.h>
@@ -29,9 +28,11 @@
 #include "mp_msg.h"
 #include "help_mp.h"
 #include "mpcommon.h"
+#include "mppacked.h"
 #include "stream/stream.h"
 #include "demuxer.h"
 #include "stheader.h"
+#include "libavutil/avstring.h"
 #include "libavutil/intreadwrite.h"
 #include "aviprint.h"
 #include "demux_mov.h"
@@ -81,7 +82,8 @@ typedef struct stream_header_audio {
     ogg_int32_t avgbytespersec;
 } stream_header_audio;
 
-typedef struct __attribute__((__packed__)) stream_header {
+MP_PACKED(
+typedef struct, stream_header {
     char streamtype[8];
     char subtype[4];
 
@@ -103,6 +105,7 @@ typedef struct __attribute__((__packed__)) stream_header {
         stream_header_audio	audio;
     } sh;
 } stream_header;
+)
 
 /// Our private datas
 
@@ -355,11 +358,11 @@ static int demux_ogg_check_lang(const char *clang, const char *langlist)
     if (!langlist || !*langlist)
         return 0;
     while ((c = strchr(langlist, ','))) {
-        if (!strncasecmp(clang, langlist, c - langlist))
+        if (!av_strncasecmp(clang, langlist, c - langlist))
             return 1;
         langlist = &c[1];
     }
-    if (!strncasecmp(clang, langlist, strlen(langlist)))
+    if (!av_strncasecmp(clang, langlist, strlen(langlist)))
         return 1;
     return 0;
 }
@@ -420,7 +423,7 @@ static void demux_ogg_check_comments(demuxer_t *d, ogg_stream_t *os,
 
     while (*cmt) {
         hdr = NULL;
-        if (!strncasecmp(*cmt, "LANGUAGE=", 9)) {
+        if (!av_strncasecmp(*cmt, "LANGUAGE=", 9)) {
             val = *cmt + 9;
             if (ogg_d->subs[id].text)
                 mp_msg(MSGT_IDENTIFY, MSGL_INFO, "ID_SID_%d_LANG=%s\n",
@@ -459,7 +462,7 @@ static void demux_ogg_check_comments(demuxer_t *d, ogg_stream_t *os,
         }
         else {
             for (i = 0; table[i].ogg; i++) {
-                if (!strncasecmp(*cmt, table[i].ogg, strlen(table[i].ogg)) &&
+                if (!av_strncasecmp(*cmt, table[i].ogg, strlen(table[i].ogg)) &&
                         (*cmt)[strlen(table[i].ogg)] == '=') {
                     hdr = table[i].mp;
                     val = *cmt + strlen(table[i].ogg) + 1;

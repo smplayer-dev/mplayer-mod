@@ -332,6 +332,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Cache "Кеш"
 #define MSGTR_GUI_CacheSize "Големина на кешот"
 #define MSGTR_GUI_Cancel "Откажи"
+#define MSGTR_GUI_CantLoadFont MSGTR_CantLoadFont
+#define MSGTR_GUI_CantLoadSub MSGTR_CantLoadSub
 #define MSGTR_GUI_Center "Центар"
 #define MSGTR_GUI_Channel1 "Канал 1"
 #define MSGTR_GUI_Channel2 "Канал 2"
@@ -406,8 +408,8 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_Lavc "Користи LAVC (ffmpeg)"
 #define MSGTR_GUI_MaximumUsageSpareCPU "Авто квалитет"
 #define MSGTR_GUI_Miscellaneous "Разно"
-#define MSGTR_GUI_MSG_DXR3NeedsLavc "Се извинуваме, не можете да пуштате датотеки кои што не се MPEG со вашиот DXR3/H+ уред без реенкодирање.\nВе молиме овозможете lavc во DXR3/H+ кутијата за конфигурирање."
-#define MSGTR_GUI_MSG_MemoryErrorWindow "Се извинуваме, немате доволно меморија за графичкиот бафер."
+#define MSGTR_GUI_MSG_DXR3NeedsLavc "Се извинуваме, не можете да пуштате датотеки кои што не се MPEG со вашиот DXR3/H+ уред без реенкодирање.\nВе молиме овозможете lavc во DXR3/H+ кутијата за конфигурирање.\n"
+#define MSGTR_GUI_MSG_MemoryErrorWindow "Се извинуваме, немате доволно меморија за графичкиот бафер.\n"
 #define MSGTR_GUI_MSG_NoFileLoaded "Не е вчитана датотека."
 #define MSGTR_GUI_MSG_NoMediaOpened "Не е отворен медиум."
 #define MSGTR_GUI_MSG_PlaybackNeedsRestart "Ве молиме запомтете дека треба да го рестартирате плејбекот за да можат некои опции да проработат!"
@@ -424,7 +426,7 @@ static const char help_text[] = MSGTR_Help;
 #define MSGTR_GUI_MSG_SkinTooManyFonts "премногу означени фонтови\n"
 #define MSGTR_GUI_MSG_SkinUnknownMessage "непозната порака: %s\n"
 #define MSGTR_GUI_MSG_SkinUnknownParameter "непознат параметар ( %s )\n"
-#define MSGTR_GUI_MSG_VideoOutError "Се извинуваме, не е пронајден компитабилен драјвер на излезното видео за графички интерфејс."
+#define MSGTR_GUI_MSG_VideoOutError "Се извинуваме, не е пронајден компитабилен драјвер на излезното видео за графички интерфејс.\n"
 #define MSGTR_GUI_Mute "Мутирај"
 #define MSGTR_GUI_NetworkStreaming "Мрежен проток ..."
 #define MSGTR_GUI_Next "Нареден стрим"

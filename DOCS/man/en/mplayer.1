@@ -1,5 +1,5 @@
-.\" $Revision: 38125 $
-.\" MPlayer (C) 2000-2019 MPlayer Team
+.\" $Revision: 38329 $
+.\" MPlayer (C) 2000-2022 MPlayer Team
 .\" This man page was/is done by Gabucino, Diego Biurrun, Jonas Jermann
 .
 .\" --------------------------------------------------------------------------
@@ -31,7 +31,7 @@
 .\" Title
 .\" --------------------------------------------------------------------------
 .
-.TH MPlayer 1 "2019-03-09" "The MPlayer Project" "The Movie Player"
+.TH MPlayer 1 "2020-02-04" "The MPlayer Project" "The Movie Player"
 .
 .SH NAME
 mplayer  \- movie player
@@ -606,7 +606,6 @@ gui_save_pos (yes/no),
 gui_tv_digital (yes/no),
 gui_video_out_pos_x,
 gui_video_out_pos_y,
-load_fullscreen  (yes/no),
 playbar (enable/disable),
 replay_gain (enable/disable),
 replay_gain_adjustment (-30..10),
@@ -655,6 +654,8 @@ gui_skin
 .RB ( skin ),
 idle
 .RB ( idle ),
+load_fullscreen
+.RB ( fs ),
 osd_level
 .RB ( osdlevel ),
 playlist_support
@@ -1809,6 +1810,10 @@ MEncoder skips writing the index with this option.
 .B \-ipv4\-only\-proxy (network only)
 Skip the proxy for IPv6 addresses.
 It will still be used for IPv4 connections.
+.
+.TP
+.B \-lavfstreamopts <options>
+Specify extra options for libavformat based streams.
 .
 .TP
 .B \-loadidx <index file>
@@ -3268,11 +3273,6 @@ Set buffer size to <size> in samples (default: 2048).
 Creative DXR2 specific output driver
 .
 .TP
-.B ivtv (IVTV only)
-IVTV specific MPEG audio output driver.
-Works with \-ac hwmpa only.
-.
-.TP
 .B v4l2 (requires Linux 2.6.22+ kernel)
 Audio output driver for V4L2 cards with hardware MPEG decoder.
 .
@@ -3916,7 +3916,7 @@ Select the driver to use as source to overlay on top of X11.
 .PD 1
 .
 .TP
-.B vdpau (with \-vc ffmpeg12vdpau, ffwmv3vdpau, ffvc1vdpau, ffh264vdpau or ffodivxvdpau)
+.B vdpau (with \-vc ffmpeg2vdpau, ffwmv3vdpau, ffvc1vdpau, ffh264vdpau or ffodivxvdpau)
 Video output that uses VDPAU to decode video via hardware.
 Also supports displaying of software-decoded video.
 .PD 0
@@ -4730,21 +4730,6 @@ Specifies the device number to use if you have more than one em8300 card.
 .PD 1
 .
 .TP
-.B ivtv (IVTV only)
-Conexant CX23415 (iCompression iTVC15) or Conexant CX23416 (iCompression
-iTVC16) MPEG decoder chip (Hauppauge WinTV PVR-150/250/350/500)
-specific video output driver for TV-out.
-Also see the lavc video filter.
-.PD 0
-.RSs
-.IPs <device>
-Explicitly choose the MPEG decoder device name to use (default: /dev/video16).
-.IPs <output>
-Explicitly choose the TV-out output to be used for the video signal.
-.RE
-.PD 1
-.
-.TP
 .B v4l2 (requires Linux 2.6.22+ kernel)
 Video output driver for V4L2 compliant cards with built-in hardware MPEG decoder.
 Also see the lavc video filter.
@@ -5284,8 +5269,12 @@ This degrades quality a lot of in almost all cases
 Skips decoding of frames completely.
 Big speedup, but jerky motion and sometimes bad artifacts
 (see skiploopfilter for available skip values).
-.IPs "threads=<1\-8> (MPEG-1/2 and H.264 only)"
-number of threads to use for decoding (default: 1)
+.IPs "threads=<1\-32>"
+Maximum number of threads used for decoding.
+Not all decoders support threading and decoders with support
+might stay below the provided limit at their choice.
+(default: 1)
+
 .IPs vismv=<value>
 Visualize motion vectors.
 .RSss
@@ -5414,6 +5403,11 @@ natural bicubic spline
 Some \-sws options are tunable.
 The description of the scale video filter has further information.
 .RE
+.
+.TP
+.B \-swsopts <software scaler options>
+Specify advanced software scaler options provided by libswscale.
+Set to "help" to get a list of supported options.
 .
 .TP
 .B \-vc <[\-|+]codec1,[\-|+]codec2,...[,]>
@@ -8755,7 +8749,7 @@ This also suppresses the user_data header in MPEG-4 streams.
 Do not use this option unless you know exactly what you are doing.
 .
 .TP
-.B threads=<1\-8>
+.B threads=<1\-16>
 Maximum number of threads to use (default: 1).
 May have a slight negative effect on motion estimation.
 .RE
@@ -12444,7 +12438,7 @@ explains how to create useful bug reports.
 MPlayer was initially written by Arpad Gereoffy.
 See the AUTHORS file for a list of some of the many other contributors.
 .PP
-MPlayer is (C) 2000\-2019 The MPlayer Team
+MPlayer is (C) 2000\-2022 The MPlayer Team
 .PP
 This man page was written mainly by Gabucino, Jonas Jermann and Diego Biurrun.
 It is maintained by Diego Biurrun.

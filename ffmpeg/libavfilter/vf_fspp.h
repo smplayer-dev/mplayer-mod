@@ -31,7 +31,7 @@
 #define DCTSIZE 8
 #define DCTSIZE_S "8"
 
-#define FIX(x,s)  ((int) ((x) * (1 << s) + 0.5) & 0xffff)
+#define FIX(x,s)  ((x) * (1 << s) + 0.5)
 
 #define MULTIPLY16H(x,k)   (((x) * (k)) >> 16)
 #define THRESHOLD(r,x,t)                         \
@@ -65,8 +65,8 @@ typedef struct FSPPContext {
     int prev_q;
     uint8_t *src;
     int16_t *temp;
-    uint8_t *non_b_qp_table;
-    int non_b_qp_alloc_size;
+    int8_t  *non_b_qp_table;
+    int non_b_qp_stride;
     int use_bframe_qp;
 
     void (*store_slice)(uint8_t *dst, int16_t *src,

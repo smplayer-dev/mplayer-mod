@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
+#include "libavutil/channel_layout.h"
 #include "libavutil/intreadwrite.h"
 #include "libavutil/timecode.h"
 #include "avformat.h"
@@ -120,7 +121,7 @@ static int wsd_read_header(AVFormatContext *s)
     }
 
     avio_skip(pb, 4);
-    av_timecode_make_smpte_tc_string(playback_time, avio_rb32(pb), 0);
+    av_timecode_make_smpte_tc_string2(playback_time, (AVRational){1,1}, avio_rb32(pb) & 0x00ffffffU, 1, 1);
     av_dict_set(&s->metadata, "playback_time", playback_time, 0);
 
     st->codecpar->codec_type  = AVMEDIA_TYPE_AUDIO;
@@ -137,7 +138,7 @@ static int wsd_read_header(AVFormatContext *s)
     if (!(channel_assign & 1)) {
         int i;
         for (i = 1; i < 32; i++)
-            if (channel_assign & (1 << i))
+            if ((channel_assign >> i) & 1)
                 st->codecpar->channel_layout |= wsd_to_av_channel_layoyt(s, i);
     }
 
@@ -161,7 +162,7 @@ static int wsd_read_header(AVFormatContext *s)
     return avio_seek(pb, data_offset, SEEK_SET);
 }
 
-AVInputFormat ff_wsd_demuxer = {
+const AVInputFormat ff_wsd_demuxer = {
     .name         = "wsd",
     .long_name    = NULL_IF_CONFIG_SMALL("Wideband Single-bit Data (WSD)"),
     .read_probe   = wsd_probe,
@@ -170,4 +171,6 @@ AVInputFormat ff_wsd_demuxer = {
     .extensions   = "wsd",
     .flags        = AVFMT_GENERIC_INDEX | AVFMT_NO_BYTE_SEEK,
     .raw_codec_id = AV_CODEC_ID_DSD_MSBF,
+    .priv_data_size = sizeof(FFRawDemuxerContext),
+    .priv_class     = &ff_raw_demuxer_class,
 };

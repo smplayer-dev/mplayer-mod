@@ -26,9 +26,9 @@
  * Libpostproc version macros
  */
 
-#include "libavutil/avutil.h"
+#include "libavutil/version.h"
 
-#define LIBPOSTPROC_VERSION_MAJOR  55
+#define LIBPOSTPROC_VERSION_MAJOR  56
 #define LIBPOSTPROC_VERSION_MINOR   4
 #define LIBPOSTPROC_VERSION_MICRO 100
 

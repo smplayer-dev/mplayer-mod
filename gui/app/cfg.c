@@ -93,8 +93,7 @@ gtkASS_t gtkASS;
 int gtkReplayGainOn;
 int gtkReplayGainAdjustment;
 
-int gtkEnablePlayBar = True;
-int gtkLoadFullscreen;
+int gtkEnablePlayBar   = True;
 int gtkShowVideoWindow = True;
 
 int gui_save_pos    = True;
@@ -179,7 +178,7 @@ static const m_option_t gui_opts[] = {
     { "replay_gain_adjustment",      &gtkReplayGainAdjustment, CONF_TYPE_INT,         CONF_RANGE,  -30,   10,         NULL },
 
     { "playbar",                     &gtkEnablePlayBar,        CONF_TYPE_FLAG,        0,           0,     1,          NULL },
-    { "load_fullscreen",             &gtkLoadFullscreen,       CONF_TYPE_FLAG,        0,           0,     1,          NULL },
+    { "load_fullscreen",             &fullscreen,              CONF_TYPE_FLAG,        0,           0,     1,          NULL },
     { "show_videowin",               &gtkShowVideoWindow,      CONF_TYPE_FLAG,        0,           0,     1,          NULL },
 
     { "gui_save_pos",                &gui_save_pos,            CONF_TYPE_FLAG,        0,           0,     1,          NULL },
@@ -279,14 +278,14 @@ void cfg_read(void)
     gui_conf = m_config_new();
 
     if (!gui_conf) {
-        gmp_msg(MSGT_GPLAYER, MSGL_FATAL, MSGTR_MemAllocFailed);
+        gmp_msg(MSGT_GPLAYER, MSGL_FATAL, _(MSGTR_GUI_MemAllocFailed));
         mplayer(MPLAYER_EXIT_GUI, EXIT_ERROR, 0);
     }
 
     m_config_register_options(gui_conf, gui_opts);
 
     if (!disable_gui_conf && (m_config_parse_config_file(gui_conf, fname, 1) < 0)) {
-        gmp_msg(MSGT_GPLAYER, MSGL_ERR, MSGTR_ConfigFileError "\n");
+        gmp_msg(MSGT_GPLAYER, MSGL_ERR, _(MSGTR_GUI_ConfigFileError));
         mplayer(MPLAYER_EXIT_GUI, EXIT_ERROR, 0);
     }
 
@@ -307,7 +306,7 @@ void cfg_read(void)
             item = calloc(1, sizeof(*item));
 
             if (!item) {
-                gmp_msg(MSGT_GPLAYER, MSGL_FATAL, MSGTR_MemAllocFailed);
+                gmp_msg(MSGT_GPLAYER, MSGL_FATAL, _(MSGTR_GUI_MemAllocFailed));
                 mplayer(MPLAYER_EXIT_GUI, EXIT_ERROR, 0);
             }
 
@@ -342,7 +341,7 @@ void cfg_read(void)
             item = calloc(1, sizeof(*item));
 
             if (!item) {
-                gmp_msg(MSGT_GPLAYER, MSGL_FATAL, MSGTR_MemAllocFailed);
+                gmp_msg(MSGT_GPLAYER, MSGL_FATAL, _(MSGTR_GUI_MemAllocFailed));
                 mplayer(MPLAYER_EXIT_GUI, EXIT_ERROR, 0);
             }
 
@@ -423,7 +422,7 @@ void cfg_write(void)
             char *val = m_option_print(opts, opts->p);
 
             if (val == (char *)-1) {
-                gmp_msg(MSGT_GPLAYER, MSGL_WARN, MSGTR_GUI_MSG_UnableToSaveOption, opts->name);
+                gmp_msg(MSGT_GPLAYER, MSGL_WARN, _(MSGTR_GUI_MSG_UnableToSaveOption), opts->name);
                 val = NULL;
             }
 
