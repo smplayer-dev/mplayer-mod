@@ -43,10 +43,11 @@ CONFIGURE_FLAGS = \
 	--prefix=/usr \
 	--confdir=/etc/mplayer \
 	--enable-xvmc \
-	--enable-menu \
+	--disable-menu \
 	--disable-arts \
 	--language=all \
 	--disable-esd \
+	--disable-smb \
 	--disable-libmpeg2-internal \
 	--disable-ffmpeg_a \
 	--extra-libs-mplayer=-lrt \
