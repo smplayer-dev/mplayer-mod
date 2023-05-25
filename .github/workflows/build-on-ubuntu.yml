@@ -32,6 +32,8 @@ jobs:
             #cp debian/debian/* MPlayer-${{env.version}}/debian/
             cd MPlayer-${{env.version}}
             cp debian-mod/* debian/
+            sed -i '/--disable-libmpeg2-internal/d; /--disable-ffmpeg_a/d' debian/rules
+            cat debian/rules
       
       - name: Add ffmpeg repository
         if: ${{ matrix.config.name == 'xenial' || matrix.config.name == 'bionic' }}
